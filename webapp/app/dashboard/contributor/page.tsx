@@ -59,30 +59,35 @@ export default function ContributorDashboard() {
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-  async function loadData() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/auth/login'); return; }
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/auth/login'); return; }
 
-    const [{ data: prof }, { data: contrib }] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase.from('contributor_profiles').select('*').eq('profile_id', user.id).single(),
-    ]);
+      const [{ data: prof }, { data: contrib }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('contributor_profiles').select('*').eq('profile_id', user.id).single(),
+      ]);
 
-    setProfile(prof);
-    setContributor(contrib);
-    setLoading(false);
+      setProfile(prof);
+      setContributor(contrib);
+      setLoading(false);
 
-    supabase
-      .channel('contributor_' + user.id)
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public',
-        table: 'contributor_profiles',
-        filter: `profile_id=eq.${user.id}`,
-      }, (payload) => setContributor(payload.new as ContributorProfile))
-      .subscribe();
-  }
+      channel = supabase
+        .channel('contributor_' + user.id)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public',
+          table: 'contributor_profiles',
+          filter: `profile_id=eq.${user.id}`,
+        }, (payload) => setContributor(payload.new as ContributorProfile))
+        .subscribe();
+    }
+
+    loadData();
+    return () => { if (channel) supabase.removeChannel(channel); };
+  }, [router]);
 
   if (loading) {
     return (
