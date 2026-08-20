@@ -119,7 +119,6 @@ export default function SubscriptionsPage() {
                 className={`flex-1 rounded-xl p-3 text-center transition-all ${currentTier === p.id ? 'ring-2' : ''}`}
                 style={{
                   backgroundColor: p.bg,
-                  ringColor: p.color,
                   outline: currentTier === p.id ? `2px solid ${p.color}` : 'none',
                 }}
               >
