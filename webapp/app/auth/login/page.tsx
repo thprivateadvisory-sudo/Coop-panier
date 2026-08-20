@@ -41,25 +41,26 @@ export default function LoginPage() {
         });
         if (error) throw error;
         if (data.user) {
-          const { error: profErr } = await supabase.from('profiles').upsert({
-            id: data.user.id,
-            email,
-            full_name: fullName,
-            role,
-          });
+          const { error: profErr } = await supabase.from('profiles').upsert(
+            { id: data.user.id, email, full_name: fullName, role },
+            { onConflict: 'id' }
+          );
           if (profErr) throw profErr;
 
           if (role === 'contributor') {
-            const { error: e } = await supabase.from('contributor_profiles').upsert({ profile_id: data.user.id });
+            const { error: e } = await supabase
+              .from('contributor_profiles')
+              .upsert({ profile_id: data.user.id }, { onConflict: 'profile_id' });
             if (e) throw e;
           } else if (role === 'beneficiary') {
-            const { error: e } = await supabase.from('beneficiary_profiles').upsert({ profile_id: data.user.id });
+            const { error: e } = await supabase
+              .from('beneficiary_profiles')
+              .upsert({ profile_id: data.user.id }, { onConflict: 'profile_id' });
             if (e) throw e;
           } else if (role === 'association') {
-            const { error: e } = await supabase.from('association_profiles').upsert({
-              profile_id: data.user.id,
-              name: fullName,
-            });
+            const { error: e } = await supabase
+              .from('association_profiles')
+              .upsert({ profile_id: data.user.id, name: fullName }, { onConflict: 'profile_id' });
             if (e) throw e;
           }
           router.push('/dashboard');
