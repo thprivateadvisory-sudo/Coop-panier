@@ -23,19 +23,23 @@ export default function DashboardRedirect() {
         const role = user.user_metadata.role as string;
         const full_name = (user.user_metadata.full_name as string) ?? user.email ?? '';
 
-        await supabase.from('profiles').insert({
-          id: user.id,
-          email: user.email,
-          full_name,
-          role,
-        });
+        await supabase.from('profiles').upsert(
+          { id: user.id, email: user.email, full_name, role },
+          { onConflict: 'id' }
+        );
 
         if (role === 'contributor') {
-          await supabase.from('contributor_profiles').insert({ profile_id: user.id });
+          await supabase.from('contributor_profiles').upsert(
+            { profile_id: user.id }, { onConflict: 'profile_id' }
+          );
         } else if (role === 'beneficiary') {
-          await supabase.from('beneficiary_profiles').insert({ profile_id: user.id });
+          await supabase.from('beneficiary_profiles').upsert(
+            { profile_id: user.id }, { onConflict: 'profile_id' }
+          );
         } else if (role === 'association') {
-          await supabase.from('association_profiles').insert({ profile_id: user.id, name: full_name });
+          await supabase.from('association_profiles').upsert(
+            { profile_id: user.id, name: full_name }, { onConflict: 'profile_id' }
+          );
         }
 
         profile = { role };
