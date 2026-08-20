@@ -131,11 +131,19 @@ export default function ScanPage() {
     const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
     const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
 
-    await supabase.from('contributor_profiles').update({
-      points_available: (contributor?.points_available ?? 0) + earned,
-      points_total: (contributor?.points_total ?? 0) + earned,
-      tickets_scanned: (contributor?.tickets_scanned ?? 0) + 1,
-    }).eq('profile_id', userId);
+    await Promise.all([
+      supabase.from('contributor_profiles').update({
+        points_available: (contributor?.points_available ?? 0) + earned,
+        points_total: (contributor?.points_total ?? 0) + earned,
+        tickets_scanned: (contributor?.tickets_scanned ?? 0) + 1,
+      }).eq('profile_id', userId),
+      supabase.from('point_transactions').insert({
+        profile_id: userId,
+        amount_eur: euros,
+        points_earned: earned,
+        multiplier,
+      }),
+    ]);
 
     setPointsEarned(earned);
     await new Promise((r) => setTimeout(r, 1200));

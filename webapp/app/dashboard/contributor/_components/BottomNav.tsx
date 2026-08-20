@@ -2,10 +2,11 @@
 import { usePathname, useRouter } from 'next/navigation';
 
 const TABS = [
-  { icon: '🏠', label: 'Accueil',  href: '/dashboard/contributor' },
-  { icon: '📸', label: 'Scanner',  href: '/dashboard/contributor/scan' },
-  { icon: '⚡', label: 'Forfaits', href: '/dashboard/contributor/subscriptions' },
-  { icon: '👤', label: 'Profil',   href: '/dashboard/contributor/profile' },
+  { icon: '🏠', label: 'Accueil',    href: '/dashboard/contributor' },
+  { icon: '📸', label: 'Scanner',    href: '/dashboard/contributor/scan' },
+  { icon: '📋', label: 'Historique', href: '/dashboard/contributor/history' },
+  { icon: '⚡', label: 'Forfaits',   href: '/dashboard/contributor/subscriptions' },
+  { icon: '👤', label: 'Profil',     href: '/dashboard/contributor/profile' },
 ] as const;
 
 export function BottomNav() {
