@@ -61,6 +61,7 @@ export default function ScanPage() {
   const [pointsEarned, setPointsEarned] = useState(0);
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [userId, setUserId] = useState('');
+  const [newPointsAvailable, setNewPointsAvailable] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
 
@@ -141,6 +142,7 @@ export default function ScanPage() {
 
     const newPointsTotal = (fresh?.points_total ?? 0) + earned;
     const newBasketsFunded = Math.floor(newPointsTotal / 500);
+    const newAvailable = (fresh?.points_available ?? 0) + earned;
 
     const [{ error: updateErr }, { error: insertErr }] = await Promise.all([
       supabase.from('contributor_profiles').upsert({
@@ -166,6 +168,7 @@ export default function ScanPage() {
     }
 
     setPointsEarned(earned);
+    setNewPointsAvailable(newAvailable);
     await new Promise((r) => setTimeout(r, 1200));
     setStep('success');
   }
@@ -181,7 +184,6 @@ export default function ScanPage() {
 
   if (step === 'success') {
     const tierMulti = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
-    const newTotal = (contributor?.points_available ?? 0) + pointsEarned;
     return (
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col items-center justify-center p-6 gap-6">
         <ConfettiOverlay />
@@ -214,7 +216,7 @@ export default function ScanPage() {
 
           <p className="text-xs text-gray-400 mb-6">
             Solde disponible :{' '}
-            <strong className="text-gray-600">{newTotal.toLocaleString('fr-FR')} pts</strong>
+            <strong className="text-gray-600">{newPointsAvailable.toLocaleString('fr-FR')} pts</strong>
           </p>
 
           <div className="flex flex-col gap-3">
