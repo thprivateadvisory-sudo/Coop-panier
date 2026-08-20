@@ -10,6 +10,7 @@ import { colors } from '@/utils/theme';
 
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen';
 import { RoleSelectScreen } from '@/screens/onboarding/RoleSelectScreen';
+import { AuthScreen } from '@/screens/onboarding/AuthScreen';
 import { ContributorHomeScreen } from '@/screens/contributor/HomeScreen';
 import { ScanReceiptScreen } from '@/screens/contributor/ScanReceiptScreen';
 import { SubscriptionsScreen } from '@/screens/contributor/SubscriptionsScreen';
@@ -114,6 +115,7 @@ export function Navigation() {
           <>
             <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
+            <Stack.Screen name="AuthStack" component={AuthScreen} />
           </>
         ) : profile?.role === 'contributor' ? (
           <Stack.Screen name="ContributorApp" component={ContributorTabs} />
