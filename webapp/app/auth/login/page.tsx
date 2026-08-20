@@ -41,21 +41,26 @@ export default function LoginPage() {
         });
         if (error) throw error;
         if (data.user) {
-          await supabase.from('profiles').insert({
+          const { error: profErr } = await supabase.from('profiles').upsert({
             id: data.user.id,
             email,
             full_name: fullName,
             role,
           });
+          if (profErr) throw profErr;
+
           if (role === 'contributor') {
-            await supabase.from('contributor_profiles').insert({ profile_id: data.user.id });
+            const { error: e } = await supabase.from('contributor_profiles').upsert({ profile_id: data.user.id });
+            if (e) throw e;
           } else if (role === 'beneficiary') {
-            await supabase.from('beneficiary_profiles').insert({ profile_id: data.user.id });
+            const { error: e } = await supabase.from('beneficiary_profiles').upsert({ profile_id: data.user.id });
+            if (e) throw e;
           } else if (role === 'association') {
-            await supabase.from('association_profiles').insert({
+            const { error: e } = await supabase.from('association_profiles').upsert({
               profile_id: data.user.id,
               name: fullName,
             });
+            if (e) throw e;
           }
           router.push('/dashboard');
         }

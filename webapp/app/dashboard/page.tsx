@@ -11,18 +11,43 @@ export default function DashboardRedirect() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/auth/login'); return; }
 
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
 
-      if (!profile) { router.push('/auth/login'); return; }
+      // Profile missing — happens when INSERT failed at signup (e.g. before RLS fix).
+      // Recover using metadata stored in the auth user.
+      if (!profile && user.user_metadata?.role) {
+        const role = user.user_metadata.role as string;
+        const full_name = (user.user_metadata.full_name as string) ?? user.email ?? '';
+
+        await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          full_name,
+          role,
+        });
+
+        if (role === 'contributor') {
+          await supabase.from('contributor_profiles').insert({ profile_id: user.id });
+        } else if (role === 'beneficiary') {
+          await supabase.from('beneficiary_profiles').insert({ profile_id: user.id });
+        } else if (role === 'association') {
+          await supabase.from('association_profiles').insert({ profile_id: user.id, name: full_name });
+        }
+
+        profile = { role };
+      }
+
+      // If still no profile, user is authenticated but setup never completed
+      if (!profile) { router.push('/auth/setup'); return; }
 
       if (profile.role === 'contributor') router.push('/dashboard/contributor');
       else if (profile.role === 'beneficiary') router.push('/dashboard/beneficiary');
       else if (profile.role === 'association') router.push('/dashboard/association');
-      else router.push('/auth/login');
+      else router.push('/auth/setup');
     });
   }, [router]);
 
