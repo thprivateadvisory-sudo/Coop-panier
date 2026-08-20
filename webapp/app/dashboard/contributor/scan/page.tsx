@@ -147,7 +147,7 @@ export default function ScanPage() {
       }).eq('profile_id', userId),
       supabase.from('point_transactions').insert({
         profile_id: userId,
-        type: 'ticket_scan',
+        type: 'earn_scan',
         description: 'Scan ticket de caisse',
         amount: euros,
         amount_eur: euros,
