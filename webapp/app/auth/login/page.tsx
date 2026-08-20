@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/lib/types';
 
@@ -94,9 +95,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6">
       {/* Logo */}
       <div className="text-center">
-        <div className="text-4xl mb-2">🧺</div>
-        <h1 className="font-nunito font-black text-3xl text-[#2D5016]">Coop'Panier</h1>
-        <p className="text-gray-500 text-sm mt-1">Solidarité alimentaire</p>
+        <Image src="/logo.png" alt="Coop'Panier" width={220} height={80} className="mx-auto" priority />
+        <p className="text-gray-500 text-sm mt-2">Solidarité alimentaire</p>
       </div>
 
       <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-sm border border-gray-100">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/lib/types';
 
@@ -114,8 +115,8 @@ export default function AssociationDashboard() {
       <div className="bg-[#2D5016] text-white px-6 pt-12 pb-20">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
-            <p className="text-green-200 text-sm">Bonjour 👋</p>
-            <h1 className="font-nunito font-black text-2xl mt-0.5">{pickupName || profile?.full_name}</h1>
+            <Image src="/logo.png" alt="Coop'Panier" width={140} height={50} className="brightness-0 invert mb-1" />
+            <p className="text-green-200 text-sm">{pickupName || profile?.full_name} 👋</p>
           </div>
           <button onClick={handleSignOut} className="text-sm text-green-200 hover:text-white">
             Déconnexion
