@@ -150,7 +150,7 @@ export default function ScanPage() {
         amount_eur: euros,
         points_earned: earned,
         multiplier,
-      }),
+      } as any),
     ]);
 
     if (updateErr || insertErr) {
