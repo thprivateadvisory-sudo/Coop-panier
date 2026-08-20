@@ -15,6 +15,7 @@ import { ContributorHomeScreen } from '@/screens/contributor/HomeScreen';
 import { ScanReceiptScreen } from '@/screens/contributor/ScanReceiptScreen';
 import { SubscriptionsScreen } from '@/screens/contributor/SubscriptionsScreen';
 import { BeneficiaryCardScreen } from '@/screens/beneficiary/CardScreen';
+import { ProfileScreen } from '@/screens/contributor/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,6 +55,14 @@ function ContributorTabs() {
         options={{
           tabBarLabel: 'Abonnement',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>⚡</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profil',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>👤</Text>,
         }}
       />
     </Tab.Navigator>
