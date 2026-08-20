@@ -11,6 +11,15 @@ type ScanResult = {
 
 type Step = 'camera' | 'processing' | 'success' | 'error';
 
+async function decodeQR(canvas: HTMLCanvasElement): Promise<string | null> {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const jsQR = (await import('jsqr')).default;
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+  return code?.data ?? null;
+}
+
 export default function AssociationScanPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -61,7 +70,7 @@ export default function AssociationScanPage() {
         };
       }
     } catch {
-      setCameraError('Caméra indisponible — importez une image depuis votre galerie.');
+      setCameraError("Caméra indisponible — importez une image depuis votre galerie.");
     }
   }
 
@@ -74,33 +83,21 @@ export default function AssociationScanPage() {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       if (!video || !canvas || !video.videoWidth) return;
-
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      ctx.drawImage(video, 0, 0);
-
-      try {
-        const { BarcodeDetector } = window as any;
-        if (!BarcodeDetector) return;
-        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-        const codes = await detector.detect(canvas);
-        if (codes.length > 0) {
-          if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-          stopCamera();
-          await processQR(codes[0].rawValue);
-        }
-      } catch {
-        // BarcodeDetector not supported — user must use file upload
+      canvas.getContext('2d')?.drawImage(video, 0, 0);
+      const raw = await decodeQR(canvas);
+      if (raw) {
+        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+        stopCamera();
+        await processQR(raw);
       }
-    }, 500);
+    }, 400);
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     stopCamera();
     if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
     setStep('processing');
@@ -112,23 +109,12 @@ export default function AssociationScanPage() {
       canvas.width = img.width;
       canvas.height = img.height;
       canvas.getContext('2d')?.drawImage(img, 0, 0);
-
-      try {
-        const { BarcodeDetector } = window as any;
-        if (!BarcodeDetector) {
-          showError('Lecteur QR non supporté sur cet appareil.');
-          return;
-        }
-        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-        const codes = await detector.detect(canvas);
-        if (codes.length === 0) {
-          showError('Aucun QR code détecté dans cette image.');
-          return;
-        }
-        await processQR(codes[0].rawValue);
-      } catch {
-        showError('Impossible de lire le QR code.');
+      const raw = await decodeQR(canvas);
+      if (!raw) {
+        showError('Aucun QR code détecté dans cette image.');
+        return;
       }
+      await processQR(raw);
     };
     img.src = URL.createObjectURL(file);
   }
@@ -151,7 +137,7 @@ export default function AssociationScanPage() {
       }
 
       if (bene.status !== 'active') {
-        showError('Ce bénéficiaire n\'est pas actif.');
+        showError("Ce bénéficiaire n'est pas actif.");
         return;
       }
 
@@ -205,20 +191,18 @@ export default function AssociationScanPage() {
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col items-center justify-center p-6">
         <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-md border border-gray-100">
           <div
-            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl"
             style={{ background: 'linear-gradient(135deg, #2D5016, #4A8025)' }}
           >
-            <span className="text-4xl">✓</span>
+            ✅
           </div>
           <h2 className="font-nunito font-black text-2xl text-gray-900 mb-1">Panier distribué !</h2>
           <p className="text-gray-500 text-sm mb-6">{result.beneficiaryName}</p>
-
           <div className="bg-[#EEF4E8] rounded-2xl p-5 mb-6">
             <p className="text-xs font-semibold text-[#2D5016] uppercase tracking-wide mb-1">Total reçu</p>
             <p className="font-nunito font-black text-5xl text-[#2D5016]">{result.basketsReceived}</p>
             <p className="text-xs text-gray-500 mt-1">panier{result.basketsReceived > 1 ? 's' : ''}</p>
           </div>
-
           <div className="flex flex-col gap-3">
             <button
               onClick={reset}
@@ -243,8 +227,8 @@ export default function AssociationScanPage() {
     return (
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col items-center justify-center p-6">
         <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-md border border-gray-100">
-          <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-5">
-            <span className="text-4xl">✕</span>
+          <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-5 text-4xl">
+            ❌
           </div>
           <h2 className="font-nunito font-black text-xl text-gray-900 mb-2">Échec</h2>
           <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
@@ -296,19 +280,18 @@ export default function AssociationScanPage() {
               <div className="absolute -top-0.5 -right-0.5 w-7 h-7 border-t-4 border-r-4 border-white rounded-tr-xl" />
               <div className="absolute -bottom-0.5 -left-0.5 w-7 h-7 border-b-4 border-l-4 border-white rounded-bl-xl" />
               <div className="absolute -bottom-0.5 -right-0.5 w-7 h-7 border-b-4 border-r-4 border-white rounded-br-xl" />
-              {cameraReady && (
-                <div className="absolute inset-x-0 top-0 h-0.5 bg-[#2D5016] animate-[scanLine_2s_ease-in-out_infinite]" />
-              )}
             </div>
           </>
         )}
       </div>
 
       <div className="text-center py-4 px-6">
-        <p className="text-white/60 text-sm">Pointez la caméra sur le QR code du bénéficiaire</p>
+        <p className="text-white/60 text-sm">
+          {cameraReady ? 'Pointez sur le QR code du bénéficiaire' : 'Initialisation…'}
+        </p>
       </div>
 
-      <div className="pb-12 px-6 flex items-center justify-center gap-10">
+      <div className="pb-12 px-6 flex items-center justify-center">
         <button
           onClick={() => fileRef.current?.click()}
           className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center"
@@ -316,7 +299,6 @@ export default function AssociationScanPage() {
         >
           <span className="text-2xl">🖼️</span>
         </button>
-        <div className="w-14" />
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
