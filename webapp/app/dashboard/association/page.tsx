@@ -96,7 +96,7 @@ export default function AssociationDashboard() {
 
   async function createPickupPoint() {
     if (!setupName.trim() || !setupAddress.trim()) {
-      setSetupError('Remplissez le nom et l'adresse');
+      setSetupError("Remplissez le nom et l'adresse");
       return;
     }
     setSetupError('');
