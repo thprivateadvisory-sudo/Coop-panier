@@ -11,11 +11,35 @@ export default function DashboardRedirect() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/auth/login'); return; }
 
-      const { data: profile } = await supabase
+      let { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
+
+      // Profile missing — happens when INSERT failed at signup (e.g. before RLS fix).
+      // Recover using metadata stored in the auth user.
+      if (!profile && user.user_metadata?.role) {
+        const role = user.user_metadata.role as string;
+        const full_name = (user.user_metadata.full_name as string) ?? user.email ?? '';
+
+        await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          full_name,
+          role,
+        });
+
+        if (role === 'contributor') {
+          await supabase.from('contributor_profiles').insert({ profile_id: user.id });
+        } else if (role === 'beneficiary') {
+          await supabase.from('beneficiary_profiles').insert({ profile_id: user.id });
+        } else if (role === 'association') {
+          await supabase.from('association_profiles').insert({ profile_id: user.id, name: full_name });
+        }
+
+        profile = { role };
+      }
 
       if (!profile) { router.push('/auth/login'); return; }
 
