@@ -1,0 +1,15 @@
+export const colors = {
+  vert: '#2D5016',
+  vertPale: '#EEF4E8',
+  orange: '#E8832A',
+  orangePale: '#FEF3E8',
+  gris: '#1A1A1A',
+  grisMoyen: '#6B7280',
+  grisClair: '#D1D5DB',
+  fond: '#F8F7F4',
+  blanc: '#FFFFFF',
+  bordure: '#E5E7EB',
+  success: '#16A34A',
+  error: '#DC2626',
+  warning: '#D97706',
+};

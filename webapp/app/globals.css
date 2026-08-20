@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --vert: #2D5016;
+  --vert-pale: #EEF4E8;
+  --orange: #E8832A;
+  --orange-pale: #FEF3E8;
+  --fond: #F8F7F4;
+  --bordure: #E5E7EB;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--fond);
+  color: #1A1A1A;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', sans-serif;
+}
