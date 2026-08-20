@@ -15,6 +15,10 @@ import { ContributorHomeScreen } from '@/screens/contributor/HomeScreen';
 import { ScanReceiptScreen } from '@/screens/contributor/ScanReceiptScreen';
 import { SubscriptionsScreen } from '@/screens/contributor/SubscriptionsScreen';
 import { BeneficiaryCardScreen } from '@/screens/beneficiary/CardScreen';
+import { ProfileScreen } from '@/screens/contributor/ProfileScreen';
+import { AssociationHomeScreen } from '@/screens/association/AssociationHomeScreen';
+import { ScanBeneficiaryScreen } from '@/screens/association/ScanBeneficiaryScreen';
+import { BeneficiaryListScreen } from '@/screens/association/BeneficiaryListScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -56,6 +60,14 @@ function ContributorTabs() {
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>⚡</Text>,
         }}
       />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profil',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>👤</Text>,
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -78,6 +90,18 @@ function BeneficiaryTabs() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+const AssociationStack = createNativeStackNavigator();
+
+function AssociationApp() {
+  return (
+    <AssociationStack.Navigator screenOptions={{ headerShown: false }}>
+      <AssociationStack.Screen name="AssociationHome" component={AssociationHomeScreen} />
+      <AssociationStack.Screen name="ScanBeneficiary" component={ScanBeneficiaryScreen} />
+      <AssociationStack.Screen name="BeneficiaryList" component={BeneficiaryListScreen} />
+    </AssociationStack.Navigator>
   );
 }
 
@@ -121,6 +145,8 @@ export function Navigation() {
           <Stack.Screen name="ContributorApp" component={ContributorTabs} />
         ) : profile?.role === 'beneficiary' ? (
           <Stack.Screen name="BeneficiaryApp" component={BeneficiaryTabs} />
+        ) : profile?.role === 'association' ? (
+          <Stack.Screen name="AssociationApp" component={AssociationApp} />
         ) : (
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         )}
