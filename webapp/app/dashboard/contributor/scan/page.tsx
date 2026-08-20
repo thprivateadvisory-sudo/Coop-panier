@@ -139,14 +139,17 @@ export default function ScanPage() {
       .eq('profile_id', userId)
       .single();
 
+    const newPointsTotal = (fresh?.points_total ?? 0) + earned;
+    const newBasketsFunded = Math.floor(newPointsTotal / 500);
+
     const [{ error: updateErr }, { error: insertErr }] = await Promise.all([
       supabase.from('contributor_profiles').upsert({
         profile_id: userId,
         subscription_tier: contributor?.subscription_tier ?? 'free',
         points_available: (fresh?.points_available ?? 0) + earned,
-        points_total: (fresh?.points_total ?? 0) + earned,
+        points_total: newPointsTotal,
         tickets_scanned: (fresh?.tickets_scanned ?? 0) + 1,
-        baskets_funded: fresh?.baskets_funded ?? 0,
+        baskets_funded: newBasketsFunded,
       }, { onConflict: 'profile_id' }),
       supabase.from('point_transactions').insert({
         profile_id: userId,
