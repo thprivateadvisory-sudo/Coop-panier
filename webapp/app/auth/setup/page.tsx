@@ -46,11 +46,28 @@ export default function SetupPage() {
       if (profErr) throw profErr;
 
       if (role === 'contributor') {
-        await supabase.from('contributor_profiles').upsert({ profile_id: userId });
+        const { error: cErr } = await supabase.from('contributor_profiles').upsert({
+          profile_id: userId,
+          subscription_tier: 'free',
+          points_available: 0,
+          points_total: 0,
+          tickets_scanned: 0,
+          baskets_funded: 0,
+        }, { onConflict: 'profile_id' });
+        if (cErr) throw cErr;
       } else if (role === 'beneficiary') {
-        await supabase.from('beneficiary_profiles').upsert({ profile_id: userId });
+        const { error: bErr } = await supabase.from('beneficiary_profiles').upsert({
+          profile_id: userId,
+          status: 'waitlist',
+          baskets_received: 0,
+        }, { onConflict: 'profile_id' });
+        if (bErr) throw bErr;
       } else if (role === 'association') {
-        await supabase.from('association_profiles').upsert({ profile_id: userId, name: fullName.trim() });
+        const { error: aErr } = await supabase.from('association_profiles').upsert({
+          profile_id: userId,
+          name: fullName.trim(),
+        }, { onConflict: 'profile_id' });
+        if (aErr) throw aErr;
       }
 
       if (role === 'contributor') router.push('/dashboard/contributor');

@@ -237,6 +237,28 @@ export default function AssociationDashboard() {
       </div>
 
       <div className="max-w-2xl mx-auto px-6 -mt-14 pb-12 flex flex-col gap-5">
+        {/* Scan CTA */}
+        <button
+          onClick={() => router.push('/dashboard/association/scan')}
+          className="w-full rounded-2xl overflow-hidden active:scale-95 transition-transform shadow-sm"
+        >
+          <div
+            className="p-5 flex items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, #E8832A, #F09840)' }}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-3xl flex-shrink-0">
+              📷
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-nunito font-black text-white text-xl leading-tight">Scanner un bénéficiaire</p>
+              <p className="text-orange-100 text-sm">Distribuer un panier solidaire</p>
+            </div>
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xl leading-none">›</span>
+            </div>
+          </div>
+        </button>
+
         {/* Tabs */}
         <div className="flex rounded-xl bg-white border border-gray-100 p-1 shadow-sm">
           {(['overview', 'list'] as const).map((t) => (
