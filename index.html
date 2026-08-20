@@ -258,39 +258,104 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://gzykmayyxkyamymaknsq.supabase.co';
+const SUPA_KEY = 'sb_publishable_vgc-zYhRHJO6p6Kz8DvwDQ_06rsxr1n';
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── Animation compteur ────────────────────────────────────────────────────────
 function count(el, target) {
-  let v = 0, step = target / 55;
+  const start = parseInt(el.textContent.replace(/\s/g,'')) || 0;
+  let v = start, step = Math.max((target - start) / 50, 1);
   const t = setInterval(() => {
     v = Math.min(v + step, target);
     el.textContent = Math.floor(v).toLocaleString('fr');
     if (v >= target) clearInterval(t);
   }, 20);
 }
-setTimeout(() => {
-  count(document.getElementById('c1'), 247);
-  count(document.getElementById('c2'), 1000);
-  count(document.getElementById('c3'), 10);
-  count(document.getElementById('sdeed-c'), 83);
-}, 300);
 
-function inscrire() {
-  const e = document.getElementById('email').value.trim();
-  const p = document.getElementById('profil').value;
-  if (!p) { alert('Veuillez sélectionner votre profil.'); return; }
-  if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { alert('Adresse email invalide.'); return; }
-  const l = JSON.parse(localStorage.getItem('cp_wl') || '[]');
-  l.push({ e, p, d: new Date().toISOString() });
-  localStorage.setItem('cp_wl', JSON.stringify(l));
-  const c = document.getElementById('c1');
-  count(c, parseInt(c.textContent.replace(/\s/g,'')) + 1);
+// ── Chargement des données réelles ────────────────────────────────────────────
+async function loadStats() {
+  // Nombre d'inscrits liste d'attente (temps réel)
+  const { count: waitlistCount } = await db
+    .from('waitlist')
+    .select('*', { count: 'exact', head: true });
+
+  // Stats globales d'impact
+  const { data: impact } = await db
+    .from('impact_stats')
+    .select('baskets_distributed, cities_covered, total_contributors')
+    .single();
+
+  const inscrits = waitlistCount ?? 0;
+  const paniers  = impact?.baskets_distributed ?? 0;
+  const villes   = impact?.cities_covered ?? 0;
+
+  count(document.getElementById('c1'), inscrits);
+  count(document.getElementById('c2'), paniers || 1000); // fallback objectif si aucun encore
+  count(document.getElementById('c3'), villes || 10);
+}
+
+// ── Realtime : mise à jour instantanée si quelqu'un s'inscrit ─────────────────
+db.channel('landing_realtime')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'waitlist' }, async () => {
+    const { count: n } = await db.from('waitlist').select('*', { count: 'exact', head: true });
+    const el = document.getElementById('c1');
+    count(el, n ?? 0);
+  })
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'impact_stats' }, (payload) => {
+    count(document.getElementById('c2'), payload.new.baskets_distributed || 1000);
+    count(document.getElementById('c3'), payload.new.cities_covered || 10);
+  })
+  .subscribe();
+
+// ── Formulaire d'inscription liste d'attente ──────────────────────────────────
+async function inscrire() {
+  const email  = document.getElementById('email').value.trim();
+  const profil = document.getElementById('profil').value;
+  const btn    = document.querySelector('.btn-submit');
+
+  if (!profil) { alert('Veuillez sélectionner votre profil.'); return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Adresse email invalide.'); return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Inscription en cours…';
+
+  const roleMap = { contributeur: 'contributor', beneficiaire: 'beneficiary', association: 'association' };
+  const role = roleMap[profil] ?? 'contributor';
+
+  const { error } = await db.from('waitlist').insert({ email, full_name: email, role });
+
+  if (error && error.code === '23505') {
+    // Email déjà inscrit → on montre quand même le succès
+  } else if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Rejoindre la liste d\'attente →';
+    alert('Une erreur est survenue. Réessayez dans un instant.');
+    return;
+  }
+
   document.getElementById('form-wrap').style.display = 'none';
   document.getElementById('success-wrap').style.display = 'block';
 }
-document.getElementById('email').addEventListener('keypress', e => { if (e.key === 'Enter') inscrire(); });
 
-const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }), { threshold: 0.1 });
+document.getElementById('email').addEventListener('keypress', e => {
+  if (e.key === 'Enter') inscrire();
+});
+
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
+const obs = new IntersectionObserver(
+  entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }),
+  { threshold: 0.1 }
+);
 document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadStats();
 </script>
 </body>
 </html>
