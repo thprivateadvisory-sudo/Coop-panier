@@ -44,8 +44,8 @@
       ]
     ],
     "extra": {
-      "supabaseUrl": "SUPABASE_URL_PLACEHOLDER",
-      "supabaseAnonKey": "SUPABASE_ANON_KEY_PLACEHOLDER",
+      "supabaseUrl": "https://gzykmayyxkyamymaknsq.supabase.co",
+      "supabaseAnonKey": "sb_publishable_vgc-zYhRHJO6p6Kz8DvwDQ_06rsxr1n",
       "stripePublishableKey": "STRIPE_PUBLISHABLE_KEY_PLACEHOLDER",
       "eas": {
         "projectId": "YOUR_EAS_PROJECT_ID"
