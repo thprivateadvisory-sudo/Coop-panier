@@ -12,20 +12,23 @@ const ROLES: { value: UserRole; label: string; emoji: string; desc: string }[] =
   { value: 'association', label: 'Association', emoji: '🤝', desc: 'Je distribue les paniers dans ma structure' },
 ];
 
+type Mode = 'login' | 'signup' | 'forgot';
+
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<Mode>('login');
   const [role, setRole] = useState<UserRole>('contributor');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [magicSent, setMagicSent] = useState(false);
+  const [info, setInfo] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setInfo('');
     setLoading(true);
 
     try {
@@ -33,7 +36,8 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         router.push('/dashboard');
-      } else {
+
+      } else if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -48,23 +52,33 @@ export default function LoginPage() {
           if (profErr) throw profErr;
 
           if (role === 'contributor') {
-            const { error: e } = await supabase
-              .from('contributor_profiles')
-              .upsert({ profile_id: data.user.id }, { onConflict: 'profile_id' });
+            const { error: e } = await supabase.from('contributor_profiles').upsert(
+              { profile_id: data.user.id, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 },
+              { onConflict: 'profile_id' }
+            );
             if (e) throw e;
           } else if (role === 'beneficiary') {
-            const { error: e } = await supabase
-              .from('beneficiary_profiles')
-              .upsert({ profile_id: data.user.id }, { onConflict: 'profile_id' });
+            const { error: e } = await supabase.from('beneficiary_profiles').upsert(
+              { profile_id: data.user.id, status: 'waitlist', baskets_received: 0 },
+              { onConflict: 'profile_id' }
+            );
             if (e) throw e;
           } else if (role === 'association') {
-            const { error: e } = await supabase
-              .from('association_profiles')
-              .upsert({ profile_id: data.user.id, name: fullName }, { onConflict: 'profile_id' });
+            const { error: e } = await supabase.from('association_profiles').upsert(
+              { profile_id: data.user.id, name: fullName },
+              { onConflict: 'profile_id' }
+            );
             if (e) throw e;
           }
           router.push('/dashboard');
         }
+
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+        });
+        if (error) throw error;
+        setInfo('Un lien de réinitialisation a été envoyé à ' + email);
       }
     } catch (err: any) {
       setError(err.message ?? 'Une erreur est survenue');
@@ -73,53 +87,39 @@ export default function LoginPage() {
     }
   }
 
-  async function handleMagicLink() {
-    if (!email) { setError('Entrez votre email'); return; }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    setLoading(false);
-    if (error) { setError(error.message); return; }
-    setMagicSent(true);
-  }
-
-  if (magicSent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-sm border border-gray-100">
-          <div className="text-5xl mb-4">📧</div>
-          <h2 className="font-nunito font-black text-2xl text-gray-900 mb-2">Vérifiez vos mails</h2>
-          <p className="text-gray-500 text-sm">Un lien de connexion a été envoyé à <strong>{email}</strong></p>
-          <button onClick={() => setMagicSent(false)} className="mt-6 text-sm text-gray-400 underline">
-            Retour
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6">
-      {/* Logo */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6 bg-[#F8F7F4]">
       <div className="text-center">
         <Image src="/logo.png" alt="Coop'Panier" width={220} height={80} className="mx-auto" priority />
         <p className="text-gray-500 text-sm mt-2">Solidarité alimentaire</p>
       </div>
 
       <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-sm border border-gray-100">
-        {/* Tabs */}
-        <div className="flex rounded-xl bg-gray-100 p-1 mb-6">
-          {(['login', 'signup'] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-              }`}
-            >
-              {m === 'login' ? 'Se connecter' : 'Créer un compte'}
+        {mode !== 'forgot' && (
+          <div className="flex rounded-xl bg-gray-100 p-1 mb-6">
+            {(['login', 'signup'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setError(''); setInfo(''); }}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                {m === 'login' ? 'Se connecter' : 'Créer un compte'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mode === 'forgot' && (
+          <div className="mb-6">
+            <button onClick={() => { setMode('login'); setError(''); setInfo(''); }} className="text-sm text-gray-400 flex items-center gap-1 mb-4">
+              ‹ Retour
             </button>
-          ))}
-        </div>
+            <h2 className="font-nunito font-black text-xl text-gray-900 mb-1">Mot de passe oublié</h2>
+            <p className="text-gray-500 text-sm">Entrez votre email pour recevoir un lien de réinitialisation.</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {mode === 'signup' && (
@@ -137,7 +137,6 @@ export default function LoginPage() {
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
                 />
               </div>
-
               <div>
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
                   Je suis un…
@@ -149,9 +148,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setRole(r.value)}
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
-                        role === r.value
-                          ? 'border-[#2D5016] bg-[#EEF4E8]'
-                          : 'border-gray-200 bg-white'
+                        role === r.value ? 'border-[#2D5016] bg-[#EEF4E8]' : 'border-gray-200 bg-white'
                       }`}
                     >
                       <span className="text-2xl">{r.emoji}</span>
@@ -167,9 +164,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
-              Email
-            </label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Email</label>
             <input
               type="email"
               required
@@ -180,24 +175,27 @@ export default function LoginPage() {
             />
           </div>
 
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
-            />
-          </div>
+          {mode !== 'forgot' && (
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                Mot de passe
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
+              />
+            </div>
+          )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-              {error}
-            </div>
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">{error}</div>
+          )}
+          {info && (
+            <div className="bg-[#EEF4E8] border border-[#2D5016]/20 rounded-xl px-4 py-3 text-sm text-[#2D5016]">{info}</div>
           )}
 
           <button
@@ -205,21 +203,18 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-[#2D5016] text-white font-nunito font-black py-4 rounded-xl text-base disabled:opacity-60 hover:opacity-90 transition-opacity"
           >
-            {loading ? '…' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+            {loading ? '…' : mode === 'login' ? 'Se connecter' : mode === 'signup' ? 'Créer mon compte' : 'Envoyer le lien'}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
-          <span className="text-gray-300 text-sm">ou</span>
-        </div>
-
-        <button
-          onClick={handleMagicLink}
-          disabled={loading}
-          className="w-full mt-3 border-2 border-gray-200 text-gray-600 font-semibold py-3 rounded-xl text-sm hover:bg-gray-50 transition-colors"
-        >
-          ✉️ Lien de connexion par email
-        </button>
+        {mode === 'login' && (
+          <button
+            onClick={() => { setMode('forgot'); setError(''); setInfo(''); }}
+            className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600 transition-colors text-center"
+          >
+            Mot de passe oublié ?
+          </button>
+        )}
       </div>
     </div>
   );
