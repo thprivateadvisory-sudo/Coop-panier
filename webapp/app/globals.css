@@ -19,3 +19,9 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Nunito', sans-serif;
 }
+
+@keyframes confettiFall {
+  0%   { transform: translateY(-16px) rotate(0deg);   opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
