@@ -2,9 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { Profile, ContributorProfile } from '@/lib/types';
+import { BottomNav } from '../_components/BottomNav';
+
+const TIER_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  free:       { label: 'Gratuit',    color: '#6B7280', bg: '#F3F4F6' },
+  essentiel:  { label: 'Essentiel',  color: '#2D5016', bg: '#EEF4E8' },
+  engagement: { label: 'Engagement', color: '#E8832A', bg: '#FEF3E8' },
+};
+
+const LEVELS = [
+  { name: 'Graine',      emoji: '🌱', min: 0 },
+  { name: 'Solidaire',   emoji: '🤝', min: 1000 },
+  { name: 'Bienfaiteur', emoji: '⭐', min: 5000 },
+  { name: 'Ambassadeur', emoji: '🏆', min: 15000 },
+];
+
+function getLevel(total: number) {
+  return [...LEVELS].reverse().find((l) => total >= l.min) ?? LEVELS[0];
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -16,9 +33,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -53,7 +68,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F4]">
         <div className="w-10 h-10 border-4 border-[#2D5016] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -61,28 +76,45 @@ export default function ProfilePage() {
 
   const initials = (profile?.full_name ?? '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?';
   const tier = contributor?.subscription_tier ?? 'free';
-  const tierLabel = tier === 'engagement' ? 'Engagement' : tier === 'essentiel' ? 'Essentiel' : 'Gratuit';
+  const tierCfg = TIER_LABELS[tier] ?? TIER_LABELS.free;
+  const pointsTotal = contributor?.points_total ?? 0;
+  const level = getLevel(pointsTotal);
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+    : '—';
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4]">
+    <div className="min-h-screen bg-[#F8F7F4] pb-24">
       {/* Header */}
-      <div className="bg-[#2D5016] text-white px-6 pt-12 pb-20">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div>
-            <Image src="/logo.png" alt="Coop'Panier" width={140} height={50} className="brightness-0 invert mb-1" />
-            <p className="text-green-200 text-sm">Mon profil</p>
-          </div>
-          <button onClick={() => router.push('/dashboard/contributor')} className="text-sm text-green-200 hover:text-white">
-            ← Retour
-          </button>
+      <div
+        className="text-white px-6 pt-12 pb-24"
+        style={{ background: 'linear-gradient(135deg, #2D5016 0%, #3D6B1F 60%, #4A8025 100%)' }}
+      >
+        <div className="max-w-lg mx-auto">
+          <h1 className="font-nunito font-black text-2xl">Mon profil</h1>
+          <p className="text-green-200 text-sm mt-1">Gérez vos informations</p>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-6 -mt-14 pb-12 flex flex-col gap-4">
-        {/* Avatar + identity */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center">
-          <div className="w-20 h-20 rounded-full bg-[#EEF4E8] flex items-center justify-center mx-auto mb-3 font-nunito font-black text-2xl text-[#2D5016]">
+      <div className="max-w-lg mx-auto px-6 -mt-16 flex flex-col gap-4">
+        {/* Avatar card */}
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-md text-center">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 font-nunito font-black text-2xl text-white"
+            style={{ background: 'linear-gradient(135deg, #2D5016, #4A8025)' }}
+          >
             {initials}
+          </div>
+
+          {/* Level badge */}
+          <div className="flex items-center justify-center gap-1.5 mb-3">
+            <span>{level.emoji}</span>
+            <span
+              className="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+              style={{ backgroundColor: '#EEF4E8', color: '#2D5016' }}
+            >
+              {level.name}
+            </span>
           </div>
 
           {saved && (
@@ -96,19 +128,20 @@ export default function ProfilePage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 autoFocus
-                className="border-2 border-[#2D5016] rounded-xl px-4 py-2 text-center text-sm font-semibold focus:outline-none"
+                className="border-2 border-[#2D5016] rounded-xl px-4 py-2.5 text-center text-sm font-semibold focus:outline-none"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => { setEditing(false); setFullName(profile?.full_name ?? ''); }}
-                  className="flex-1 border-2 border-gray-200 text-gray-500 py-2 rounded-xl text-sm"
+                  className="flex-1 border-2 border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={saveName}
                   disabled={saving || !fullName.trim()}
-                  className="flex-1 bg-[#2D5016] text-white py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  className="flex-1 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+                  style={{ backgroundColor: '#2D5016' }}
                 >
                   {saving ? '…' : 'Enregistrer'}
                 </button>
@@ -124,12 +157,17 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Info */}
+        {/* Account info */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           {[
             { label: 'Email', value: profile?.email ?? '—', emoji: '📧' },
-            { label: 'Abonnement', value: tierLabel, emoji: '⚡' },
-            { label: 'Membre depuis', value: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '—', emoji: '📅' },
+            {
+              label: 'Forfait',
+              value: tierCfg.label,
+              emoji: '⚡',
+              badge: { label: tierCfg.label, color: tierCfg.color, bg: tierCfg.bg },
+            },
+            { label: 'Membre depuis', value: memberSince, emoji: '📅' },
           ].map((item, i, arr) => (
             <div
               key={item.label}
@@ -140,16 +178,24 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-400 font-semibold">{item.label}</p>
                 <p className="text-sm text-gray-800 font-medium truncate">{item.value}</p>
               </div>
+              {'badge' in item && item.badge && (
+                <span
+                  className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                  style={{ backgroundColor: item.badge.bg, color: item.badge.color }}
+                >
+                  {item.badge.label}
+                </span>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Stats recap */}
+        {/* Stats */}
         <div className="bg-white rounded-2xl p-5 border border-gray-100">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Mes statistiques</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { emoji: '⭐', value: (contributor?.points_total ?? 0).toLocaleString('fr-FR'), label: 'Points gagnés' },
+              { emoji: '⭐', value: pointsTotal >= 1000 ? `${(pointsTotal / 1000).toFixed(1)}k` : pointsTotal, label: 'Points gagnés' },
               { emoji: '🧾', value: contributor?.tickets_scanned ?? 0, label: 'Tickets' },
               { emoji: '🧺', value: contributor?.baskets_funded ?? 0, label: 'Paniers financés' },
             ].map((s) => (
@@ -170,6 +216,8 @@ export default function ProfilePage() {
           Se déconnecter
         </button>
       </div>
+
+      <BottomNav />
     </div>
   );
 }
