@@ -76,7 +76,7 @@ export default function ContributorDashboard() {
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <Image src="/logo.png" alt="Coop'Panier" width={140} height={50} className="brightness-0 invert mb-1" />
-            <p className="text-green-200 text-sm">Bonjour, {profile?.full_name} 👋</p>
+            <p className="text-green-200 text-sm">Bonjour{profile?.full_name ? `, ${profile.full_name}` : ''} 👋</p>
           </div>
           <button
             onClick={handleSignOut}
