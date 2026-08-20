@@ -41,12 +41,13 @@ export default function DashboardRedirect() {
         profile = { role };
       }
 
-      if (!profile) { router.push('/auth/login'); return; }
+      // If still no profile, user is authenticated but setup never completed
+      if (!profile) { router.push('/auth/setup'); return; }
 
       if (profile.role === 'contributor') router.push('/dashboard/contributor');
       else if (profile.role === 'beneficiary') router.push('/dashboard/beneficiary');
       else if (profile.role === 'association') router.push('/dashboard/association');
-      else router.push('/auth/login');
+      else router.push('/auth/setup');
     });
   }, [router]);
 
