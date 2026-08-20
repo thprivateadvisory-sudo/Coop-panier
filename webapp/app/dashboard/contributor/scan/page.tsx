@@ -57,6 +57,7 @@ export default function ScanPage() {
   const [capturedImage, setCapturedImage] = useState('');
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [pointsEarned, setPointsEarned] = useState(0);
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [userId, setUserId] = useState('');
@@ -126,16 +127,23 @@ export default function ScanPage() {
     if (isNaN(euros) || euros <= 0) { setAmountError('Entrez un montant valide (ex: 23,50)'); return; }
     if (euros > 1000) { setAmountError('Montant trop élevé'); return; }
     setAmountError('');
+    setSubmitError('');
     setStep('processing');
 
     const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
     const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
 
-    await Promise.all([
+    const { data: fresh } = await supabase
+      .from('contributor_profiles')
+      .select('points_available, points_total, tickets_scanned')
+      .eq('profile_id', userId)
+      .single();
+
+    const [{ error: updateErr }, { error: insertErr }] = await Promise.all([
       supabase.from('contributor_profiles').update({
-        points_available: (contributor?.points_available ?? 0) + earned,
-        points_total: (contributor?.points_total ?? 0) + earned,
-        tickets_scanned: (contributor?.tickets_scanned ?? 0) + 1,
+        points_available: (fresh?.points_available ?? 0) + earned,
+        points_total: (fresh?.points_total ?? 0) + earned,
+        tickets_scanned: (fresh?.tickets_scanned ?? 0) + 1,
       }).eq('profile_id', userId),
       supabase.from('point_transactions').insert({
         profile_id: userId,
@@ -144,6 +152,12 @@ export default function ScanPage() {
         multiplier,
       }),
     ]);
+
+    if (updateErr || insertErr) {
+      setSubmitError((updateErr ?? insertErr)?.message ?? 'Erreur inconnue');
+      setStep('amount');
+      return;
+    }
 
     setPointsEarned(earned);
     await new Promise((r) => setTimeout(r, 1200));
@@ -270,6 +284,7 @@ export default function ScanPage() {
               />
             </div>
             {amountError && <p className="text-red-500 text-xs mt-2">{amountError}</p>}
+            {submitError && <p className="text-red-500 text-xs mt-2">Erreur : {submitError}</p>}
           </div>
 
           {previewPts !== null && (
