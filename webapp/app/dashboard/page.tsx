@@ -30,11 +30,13 @@ export default function DashboardRedirect() {
 
         if (role === 'contributor') {
           await supabase.from('contributor_profiles').upsert(
-            { profile_id: user.id }, { onConflict: 'profile_id' }
+            { profile_id: user.id, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 },
+            { onConflict: 'profile_id' }
           );
         } else if (role === 'beneficiary') {
           await supabase.from('beneficiary_profiles').upsert(
-            { profile_id: user.id }, { onConflict: 'profile_id' }
+            { profile_id: user.id, status: 'waitlist', baskets_received: 0 },
+            { onConflict: 'profile_id' }
           );
         } else if (role === 'association') {
           await supabase.from('association_profiles').upsert(
