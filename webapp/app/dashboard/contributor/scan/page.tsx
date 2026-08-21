@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { ContributorProfile } from '@/lib/types';
 
-const POINTS_PER_EURO = 10;
-const TIER_MULTIPLIER: Record<string, number> = { free: 1, essentiel: 2, engagement: 4 };
+const POINTS_PER_EURO = 1;
+const TIER_MULTIPLIER: Record<string, number> = { free: 1, essentiel: 1.5, engagement: 2 };
 const CONFETTI_COLORS = ['#2D5016', '#E8832A', '#FFD700', '#FF6B6B', '#4ECDC4', '#A8E6CF'];
 
 // Icônes visuelles par enseigne

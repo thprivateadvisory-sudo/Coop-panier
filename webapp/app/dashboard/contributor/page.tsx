@@ -8,9 +8,9 @@ import type { Profile, ContributorProfile } from '@/lib/types';
 import { BottomNav } from './_components/BottomNav';
 
 const TIER_CONFIG = {
-  free:       { label: 'Gratuit',    multi: 1,  color: '#6B7280', bg: '#F3F4F6' },
-  essentiel:  { label: 'Essentiel',  multi: 2,  color: '#2D5016', bg: '#EEF4E8' },
-  engagement: { label: 'Engagement', multi: 4,  color: '#E8832A', bg: '#FEF3E8' },
+  free:       { label: 'Gratuit',    multi: 1,    color: '#6B7280', bg: '#F3F4F6' },
+  essentiel:  { label: 'Essentiel',  multi: 1.5,  color: '#2D5016', bg: '#EEF4E8' },
+  engagement: { label: 'Engagement', multi: 2,    color: '#E8832A', bg: '#FEF3E8' },
 };
 
 const LEVELS = [
