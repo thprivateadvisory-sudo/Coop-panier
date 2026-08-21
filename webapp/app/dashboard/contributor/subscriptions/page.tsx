@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
@@ -47,7 +47,7 @@ const PLANS = [
 
 type PlanId = 'free' | 'essentiel' | 'engagement';
 
-export default function SubscriptionsPage() {
+function SubscriptionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
@@ -244,5 +244,13 @@ export default function SubscriptionsPage() {
 
       <BottomNav />
     </div>
+  );
+}
+
+export default function SubscriptionsPage() {
+  return (
+    <Suspense>
+      <SubscriptionsContent />
+    </Suspense>
   );
 }

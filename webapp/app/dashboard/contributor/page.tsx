@@ -107,10 +107,9 @@ export default function ContributorDashboard() {
   const firstName = profile?.full_name?.split(' ')[0] ?? '';
   const initials = (profile?.full_name ?? '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?';
 
-  const inCycle = pointsAvail % BASKET_COST;
-  const progressToBasket = pointsAvail > 0 && inCycle === 0 ? 1 : inCycle / BASKET_COST;
-  const toNext = inCycle === 0 ? 0 : BASKET_COST - inCycle;
-  const basketReady = pointsAvail >= BASKET_COST && inCycle === 0;
+  const basketReady = pointsAvail >= BASKET_COST;
+  const progressToBasket = basketReady ? 1 : pointsAvail / BASKET_COST;
+  const toNext = basketReady ? 0 : BASKET_COST - pointsAvail;
 
   const ptsDisplay = pointsAvail >= 1000
     ? `${(pointsAvail / 1000).toFixed(1)}k`
