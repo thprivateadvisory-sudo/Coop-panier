@@ -28,10 +28,10 @@ export default function Home() {
     <div className="min-h-screen bg-[#F8F7F4] flex flex-col">
       {/* Hero — fills the full viewport */}
       <div
-        className="text-white px-6 pt-16 pb-36 relative overflow-hidden flex flex-col justify-between"
+        className="text-white px-6 pt-16 pb-12 relative overflow-hidden flex flex-col justify-between rounded-b-[2.5rem]"
         style={{
           background: 'linear-gradient(160deg, #1e3a0f 0%, #2D5016 45%, #3D6B1F 100%)',
-          minHeight: 'calc(100svh + 4rem)',
+          minHeight: '100svh',
         }}
       >
         <div className="max-w-lg mx-auto w-full relative z-10 flex flex-col flex-1">
@@ -71,7 +71,7 @@ export default function Home() {
       </div>
 
       {/* Role cards + stats */}
-      <div className="max-w-lg mx-auto px-6 -mt-16 flex flex-col gap-4 pb-12">
+      <div className="max-w-lg mx-auto px-6 mt-4 flex flex-col gap-4 pb-12">
         {[
           {
             emoji: '🛒',
