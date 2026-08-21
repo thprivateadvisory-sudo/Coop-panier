@@ -134,38 +134,35 @@ export default function ScanPage() {
     const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
     const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
 
-    const { data: fresh } = await supabase
-      .from('contributor_profiles')
-      .select('points_available, points_total, tickets_scanned, baskets_funded')
-      .eq('profile_id', userId)
-      .single();
+    // credit_points() est SECURITY DEFINER — contourne RLS, atomique
+    const { error: rpcErr } = await supabase.rpc('credit_points', {
+      p_profile_id: userId,
+      p_amount: earned,
+      p_type: 'earn_scan',
+      p_description: `Ticket de ${euros.toFixed(2)} €`,
+    });
 
-    const newPointsTotal = (fresh?.points_total ?? 0) + earned;
-    const newBasketsFunded = Math.floor(newPointsTotal / 500);
-    const newAvailable = (fresh?.points_available ?? 0) + earned;
-
-    const [{ error: updateErr }, { error: insertErr }] = await Promise.all([
-      supabase.from('contributor_profiles').upsert({
-        profile_id: userId,
-        subscription_tier: contributor?.subscription_tier ?? 'free',
-        points_available: (fresh?.points_available ?? 0) + earned,
-        points_total: newPointsTotal,
-        tickets_scanned: (fresh?.tickets_scanned ?? 0) + 1,
-        baskets_funded: newBasketsFunded,
-      }, { onConflict: 'profile_id' }),
-      supabase.from('point_transactions').insert({
-        profile_id: userId,
-        amount_eur: euros,
-        points_earned: earned,
-        multiplier,
-      } as any),
-    ]);
-
-    if (updateErr || insertErr) {
-      setSubmitError((updateErr ?? insertErr)?.message ?? 'Erreur inconnue');
+    if (rpcErr) {
+      setSubmitError(rpcErr.message ?? 'Erreur inconnue');
       setStep('amount');
       return;
     }
+
+    // Lire les valeurs fraîches après mise à jour par credit_points()
+    const { data: fresh } = await supabase
+      .from('contributor_profiles')
+      .select('points_total, points_available')
+      .eq('profile_id', userId)
+      .single();
+
+    const newPointsTotal = fresh?.points_total ?? 0;
+    const newAvailable = fresh?.points_available ?? 0;
+    const newBasketsFunded = Math.floor(newPointsTotal / 500);
+
+    // Mettre à jour baskets_funded (champ calculé, nécessite UPDATE policy)
+    await supabase.from('contributor_profiles')
+      .update({ baskets_funded: newBasketsFunded })
+      .eq('profile_id', userId);
 
     setPointsEarned(earned);
     setNewPointsAvailable(newAvailable);

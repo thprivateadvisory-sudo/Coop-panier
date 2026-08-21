@@ -35,7 +35,7 @@ export default function LoginPage() {
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
 
       } else if (mode === 'signup') {
         const { data, error } = await supabase.auth.signUp({
@@ -46,7 +46,7 @@ export default function LoginPage() {
         if (error) throw error;
 
         if (data.user) {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }
 
       } else {
