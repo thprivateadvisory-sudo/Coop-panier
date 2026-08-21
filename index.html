@@ -69,7 +69,7 @@
     }
     .hero-inner {
       max-width: 1200px; margin: 0 auto; width: 100%;
-      display: grid; grid-template-columns: 1fr 420px; gap: 80px; align-items: center;
+      display: grid; grid-template-columns: 1fr 500px; gap: 60px; align-items: center;
     }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
@@ -113,105 +113,17 @@
     .hero-stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
     /* PHONE MOCKUP — iPhone 15 style */
+    /* PHONE IMAGE */
     .phone-wrap {
       display: flex; justify-content: center; align-items: center;
-      perspective: 1300px;
-      padding: 40px 70px 40px 10px;
+      padding: 20px 0;
     }
-    /* Outer silver titanium frame */
-    .phone {
-      width: 256px; height: 540px;
-      border-radius: 52px;
-      padding: 3px;
-      position: relative;
-      transform: rotateY(-13deg) rotateX(4deg) rotateZ(1.2deg);
-      transform-style: preserve-3d;
-      background: linear-gradient(148deg,
-        #f4f4f4 0%, #e8eaed 15%, #d0d3d9 40%,
-        #bfc2c8 60%, #d2d5db 80%, #eceef0 100%);
-      box-shadow:
-        42px 60px 100px rgba(0,0,0,.30),
-        20px 28px 48px rgba(0,0,0,.18),
-        6px 8px 16px rgba(0,0,0,.10),
-        inset 0 1.5px 0 rgba(255,255,255,.9),
-        inset 0 -1px 0 rgba(0,0,0,.12),
-        inset 1px 0 0 rgba(255,255,255,.4);
+    .phone-img {
+      width: 100%; max-width: 490px; max-height: 90vh;
+      height: auto; object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 32px 48px rgba(0,0,0,.18)) drop-shadow(0 8px 16px rgba(0,0,0,.10));
     }
-    /* Power button (right) */
-    .phone::before {
-      content: '';
-      position: absolute; right: -3.5px; top: 136px;
-      width: 3.5px; height: 68px; border-radius: 0 2.5px 2.5px 0;
-      background: linear-gradient(to right, #b8bcc4, #d4d7dd);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
-    }
-    /* Volume + silent switch (left) */
-    .phone::after {
-      content: '';
-      position: absolute; left: -3.5px; top: 84px;
-      width: 3.5px; border-radius: 2.5px 0 0 2.5px;
-      height: 24px;
-      background: linear-gradient(to left, #b8bcc4, #d4d7dd);
-      box-shadow:
-        0 38px 0 rgba(184,188,196,1),    /* vol+ */
-        0 38px 0 0 rgba(184,188,196,1),
-        0 92px 0 rgba(184,188,196,1);    /* vol- */
-    }
-    /* Inner dark rim (the black bezel) */
-    .phone-rim {
-      background: #1a1d26;
-      border-radius: 49px;
-      height: 100%;
-      padding: 11px;
-      position: relative;
-    }
-    .phone-screen {
-      background: #f4f5f4; border-radius: 39px;
-      height: 100%; overflow: hidden;
-      display: flex; flex-direction: column;
-    }
-    /* Dynamic Island */
-    .phone-notch {
-      position: absolute; top: 13px; left: 50%; transform: translateX(-50%);
-      width: 86px; height: 25px;
-      background: #0a0a0a; border-radius: 20px; z-index: 10;
-    }
-    .phone-header {
-      background: var(--green); padding: 52px 18px 20px;
-      color: white;
-    }
-    .phone-header-greeting { font-size: 11px; opacity: 0.7; margin-bottom: 2px; }
-    .phone-header-name { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; }
-    .phone-header-amount { margin-top: 14px; }
-    .phone-header-amount-label { font-size: 10px; opacity: 0.65; }
-    .phone-header-amount-val { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.1; }
-    .phone-body { padding: 14px; flex: 1; overflow: hidden; }
-    .phone-section-title { font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
-    .phone-card {
-      background: white; border-radius: 14px; padding: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 10px;
-    }
-    .phone-card-label { font-size: 10px; color: #888; margin-bottom: 4px; }
-    .phone-card-bar-bg { background: #e8f4df; border-radius: 6px; height: 8px; }
-    .phone-card-bar-fg { background: var(--green); border-radius: 6px; height: 8px; width: 73%; }
-    .phone-card-row { display: flex; justify-content: space-between; margin-top: 6px; }
-    .phone-card-row span { font-size: 10px; font-weight: 600; color: var(--green); }
-    .phone-card-row small { font-size: 10px; color: #aaa; }
-    .phone-tx { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-    .phone-tx:last-child { border-bottom: none; }
-    .phone-tx-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--green-light); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-    .phone-tx-info { flex: 1; }
-    .phone-tx-name { font-size: 11px; font-weight: 500; color: #222; }
-    .phone-tx-date { font-size: 9px; color: #aaa; }
-    .phone-tx-amount { font-size: 11px; font-weight: 600; color: var(--green); }
-    .phone-tabbar {
-      background: white; border-top: 1px solid #f0f0f0;
-      display: flex; padding: 8px 0 4px;
-    }
-    .phone-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-    .phone-tab-icon { width: 18px; height: 18px; }
-    .phone-tab-label { font-size: 8px; color: #aaa; }
-    .phone-tab.active .phone-tab-label { color: var(--green); }
 
     /* STEPS */
     .section-steps { background: white; padding: 100px 40px; }
@@ -364,8 +276,8 @@
       .nav-mobile-menu { display: block; }
       .hero { padding: 100px 24px 60px; min-height: auto; }
       .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-      .phone-wrap { order: -1; padding: 20px 30px 0 0; perspective: 900px; }
-      .phone { width: 200px; height: 422px; transform: rotateY(-8deg) rotateX(2deg) rotateZ(.8deg); }
+      .phone-wrap { order: -1; padding: 0; }
+      .phone-img { max-width: 320px; max-height: 70vw; }
       .steps-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
       .roles-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
       .impact-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
@@ -442,73 +354,7 @@
       </div>
       <!-- Phone Mockup -->
       <div class="phone-wrap">
-        <div class="phone">
-          <div class="phone-rim">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <div class="phone-header">
-              <div class="phone-header-greeting">Bonjour,</div>
-              <div class="phone-header-name">Marie</div>
-              <div class="phone-header-amount">
-                <div class="phone-header-amount-label">Contribution ce mois</div>
-                <div class="phone-header-amount-val">18,50 €</div>
-              </div>
-            </div>
-            <div class="phone-body">
-              <div class="phone-section-title">Progrès</div>
-              <div class="phone-card">
-                <div class="phone-card-label">Paniers financés cette semaine</div>
-                <div class="phone-card-bar-bg"><div class="phone-card-bar-fg"></div></div>
-                <div class="phone-card-row">
-                  <span>3 / 4 paniers</span>
-                  <small>Objectif atteint à 73%</small>
-                </div>
-              </div>
-              <div class="phone-section-title">Tickets récents</div>
-              <div class="phone-card">
-                <div class="phone-tx">
-                  <div class="phone-tx-icon">🛒</div>
-                  <div class="phone-tx-info">
-                    <div class="phone-tx-name">Carrefour Market</div>
-                    <div class="phone-tx-date">Aujourd'hui</div>
-                  </div>
-                  <div class="phone-tx-amount">+2,30 €</div>
-                </div>
-                <div class="phone-tx">
-                  <div class="phone-tx-icon">🛒</div>
-                  <div class="phone-tx-info">
-                    <div class="phone-tx-name">Monoprix</div>
-                    <div class="phone-tx-date">Hier</div>
-                  </div>
-                  <div class="phone-tx-amount">+1,80 €</div>
-                </div>
-                <div class="phone-tx">
-                  <div class="phone-tx-icon">🛒</div>
-                  <div class="phone-tx-info">
-                    <div class="phone-tx-name">Leclerc</div>
-                    <div class="phone-tx-date">Il y a 2 jours</div>
-                  </div>
-                  <div class="phone-tx-amount">+3,10 €</div>
-                </div>
-              </div>
-            </div>
-            <div class="phone-tabbar">
-              <div class="phone-tab active">
-                <svg class="phone-tab-icon" viewBox="0 0 24 24" fill="#2D5016"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                <div class="phone-tab-label" style="color:#2D5016">Accueil</div>
-              </div>
-              <div class="phone-tab">
-                <svg class="phone-tab-icon" viewBox="0 0 24 24" fill="#aaa"><path d="M9 3L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-                <div class="phone-tab-label">Scanner</div>
-              </div>
-              <div class="phone-tab">
-                <svg class="phone-tab-icon" viewBox="0 0 24 24" fill="#aaa"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                <div class="phone-tab-label">Profil</div>
-              </div>
-            </div>
-          </div>
-          </div><!-- /.phone-rim -->
-        </div>
+        <img src="phone-mockup.png" alt="Coop'Panier application mobile" class="phone-img">
       </div>
     </div>
   </section>
