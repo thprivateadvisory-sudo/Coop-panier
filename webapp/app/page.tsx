@@ -26,41 +26,51 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8F7F4] flex flex-col">
-      {/* Hero */}
+      {/* Hero — fills the full viewport */}
       <div
-        className="text-white px-6 pt-14 pb-32 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #2D5016 0%, #3D6B1F 60%, #4A8025 100%)' }}
+        className="text-white px-6 pt-16 pb-36 relative overflow-hidden flex flex-col justify-between"
+        style={{
+          background: 'linear-gradient(160deg, #1e3a0f 0%, #2D5016 45%, #3D6B1F 100%)',
+          minHeight: '100svh',
+        }}
       >
-        <div className="max-w-lg mx-auto relative z-10">
-          <Image src="/logo.png" alt="Coop'Panier" width={160} height={58} className="brightness-0 invert mb-8" priority />
-          <h1 className="font-nunito font-black text-4xl leading-tight mb-4">
-            La solidarité alimentaire,<br />ensemble.
-          </h1>
-          <p className="text-green-200 text-lg leading-relaxed mb-8">
-            Scannez vos tickets de caisse, gagnez des points et financez des paniers pour ceux qui en ont besoin.
-          </p>
+        <div className="max-w-lg mx-auto w-full relative z-10 flex flex-col flex-1">
+          <Image src="/logo.png" alt="Coop'Panier" width={160} height={58} className="brightness-0 invert mb-10" priority />
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1.5 mb-6 w-fit">
+              <span className="w-2 h-2 rounded-full bg-[#E8832A] flex-shrink-0" />
+              <span className="text-green-200 text-xs font-semibold tracking-wide uppercase">Application disponible</span>
+            </div>
+            <h1 className="font-nunito font-black text-[2.6rem] leading-[1.08] mb-4">
+              La solidarité<br />alimentaire,<br /><span className="text-[#a8d080]">ensemble.</span>
+            </h1>
+            <p className="text-green-200/90 text-base leading-relaxed mb-10">
+              Scannez vos tickets de caisse, gagnez des points et financez des paniers pour ceux qui en ont besoin.
+            </p>
+          </div>
           <div className="flex flex-col gap-3">
             <button
               onClick={() => router.push('/auth/login')}
-              className="w-full bg-white text-[#2D5016] font-nunito font-black py-4 rounded-2xl text-lg hover:bg-green-50 transition-colors"
+              className="w-full bg-white text-[#2D5016] font-nunito font-black py-4 rounded-2xl text-lg hover:bg-green-50 transition-colors shadow-lg"
             >
               Commencer gratuitement
             </button>
             <button
               onClick={() => router.push('/auth/login')}
-              className="w-full border-2 border-white/40 text-white font-semibold py-3.5 rounded-2xl text-base hover:bg-white/10 transition-colors"
+              className="w-full border-2 border-white/30 text-white font-semibold py-3.5 rounded-2xl text-base hover:bg-white/10 transition-colors"
             >
               J'ai déjà un compte
             </button>
           </div>
         </div>
 
-        {/* Decorative circles */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5" />
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/5" />
+        {/* Decorative shapes */}
+        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/5" />
+        <div className="absolute top-1/3 -right-16 w-48 h-48 rounded-full bg-white/5" />
+        <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
       </div>
 
-      {/* How it works */}
+      {/* Role cards + stats */}
       <div className="max-w-lg mx-auto px-6 -mt-16 flex flex-col gap-4 pb-12">
         {[
           {
