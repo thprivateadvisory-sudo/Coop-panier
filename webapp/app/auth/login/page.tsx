@@ -44,6 +44,14 @@ export default function LoginPage() {
           options: { data: { full_name: fullName, role } },
         });
         if (error) throw error;
+
+        // No session = email already used OR confirmation required
+        if (!data.session) {
+          setInfo('Un email de confirmation a été envoyé. Vérifiez votre boîte mail, ou connectez-vous si vous avez déjà un compte.');
+          setLoading(false);
+          return;
+        }
+
         if (data.user) {
           const { error: profErr } = await supabase.from('profiles').upsert(
             { id: data.user.id, email, full_name: fullName, role },
