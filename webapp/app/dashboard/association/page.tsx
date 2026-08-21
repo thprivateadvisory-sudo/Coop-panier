@@ -39,6 +39,8 @@ export default function AssociationDashboard() {
   // Pickup creation state
   const [setupName, setSetupName] = useState('');
   const [setupAddress, setSetupAddress] = useState('');
+  const [setupCity, setSetupCity] = useState('');
+  const [setupPostal, setSetupPostal] = useState('');
   const [setupSaving, setSetupSaving] = useState(false);
   const [setupError, setSetupError] = useState('');
 
@@ -95,8 +97,8 @@ export default function AssociationDashboard() {
   }
 
   async function createPickupPoint() {
-    if (!setupName.trim() || !setupAddress.trim()) {
-      setSetupError("Remplissez le nom et l'adresse");
+    if (!setupName.trim() || !setupAddress.trim() || !setupCity.trim() || !setupPostal.trim()) {
+      setSetupError("Remplissez tous les champs");
       return;
     }
     setSetupError('');
@@ -108,6 +110,8 @@ export default function AssociationDashboard() {
     const { data, error } = await supabase.from('pickup_points').insert({
       name: setupName.trim(),
       address: setupAddress.trim(),
+      city: setupCity.trim(),
+      postal_code: setupPostal.trim(),
       association_profile_id: user.id,
       active: true,
     }).select('id, name').single();
@@ -193,9 +197,35 @@ export default function AssociationDashboard() {
                   type="text"
                   value={setupAddress}
                   onChange={(e) => setSetupAddress(e.target.value)}
-                  placeholder="Ex: 12 rue de la Paix, 75001 Paris"
+                  placeholder="Ex: 12 rue de la Paix"
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
                 />
+              </div>
+              <div className="flex gap-3">
+                <div className="w-28">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block">
+                    Code postal
+                  </label>
+                  <input
+                    type="text"
+                    value={setupPostal}
+                    onChange={(e) => setSetupPostal(e.target.value)}
+                    placeholder="75001"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block">
+                    Ville
+                  </label>
+                  <input
+                    type="text"
+                    value={setupCity}
+                    onChange={(e) => setSetupCity(e.target.value)}
+                    placeholder="Paris"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
+                  />
+                </div>
               </div>
 
               {setupError && (
@@ -206,7 +236,7 @@ export default function AssociationDashboard() {
 
               <button
                 onClick={createPickupPoint}
-                disabled={setupSaving || !setupName.trim() || !setupAddress.trim()}
+                disabled={setupSaving || !setupName.trim() || !setupAddress.trim() || !setupCity.trim() || !setupPostal.trim()}
                 className="w-full bg-[#2D5016] text-white font-nunito font-black py-4 rounded-xl text-base disabled:opacity-50"
               >
                 {setupSaving ? '…' : 'Créer le point de retrait'}
