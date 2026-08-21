@@ -29,6 +29,7 @@ export function AuthScreen({ route, navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -80,7 +81,10 @@ export function AuthScreen({ route, navigation }: Props) {
 
     // Créer le sous-profil selon le rôle
     if (role === 'contributor') {
-      await supabase.from('contributor_profiles').insert({ profile_id: data.user.id });
+      await supabase.from('contributor_profiles').insert({
+        profile_id: data.user.id,
+        ...(referralCode.trim() ? { referred_by: referralCode.trim().toUpperCase() } : {}),
+      });
     } else if (role === 'beneficiary') {
       await supabase.from('beneficiary_profiles').insert({ profile_id: data.user.id });
     } else if (role === 'association') {
@@ -176,6 +180,31 @@ export function AuthScreen({ route, navigation }: Props) {
                   autoCapitalize="words"
                   autoComplete="name"
                 />
+              </View>
+            )}
+
+            {mode === 'signup' && role === 'contributor' && (
+              <View style={styles.field}>
+                <Text style={styles.label}>
+                  Code de parrainage{' '}
+                  <Text style={{ color: colors.grisClair, textTransform: 'none', fontWeight: '400' }}>
+                    (facultatif)
+                  </Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, { fontFamily: 'Inter', letterSpacing: 3 }]}
+                  placeholder="Ex : X3K9PL"
+                  placeholderTextColor={colors.grisClair}
+                  value={referralCode}
+                  onChangeText={(t) => setReferralCode(t.toUpperCase())}
+                  autoCapitalize="characters"
+                  maxLength={6}
+                />
+                {referralCode.length > 0 && (
+                  <Text style={{ fontFamily: 'Inter', fontSize: 12, color: colors.vert, marginTop: 2 }}>
+                    +50 pts offerts à l'inscription !
+                  </Text>
+                )}
               </View>
             )}
 
