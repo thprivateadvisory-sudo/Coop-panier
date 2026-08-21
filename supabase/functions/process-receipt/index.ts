@@ -8,11 +8,11 @@ const VISION_API_KEY = Deno.env.get('GOOGLE_VISION_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-const POINTS_PER_EURO = 10;
+const POINTS_PER_EURO = 1;
 const SUBSCRIPTION_MULTIPLIERS: Record<string, number> = {
   free: 1,
-  essentiel: 2,
-  engagement: 4,
+  essentiel: 1.5,
+  engagement: 2,
 };
 
 // Ordre = priorité (termes plus spécifiques d'abord)

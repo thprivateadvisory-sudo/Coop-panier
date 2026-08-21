@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { ContributorProfile } from '@/lib/types';
@@ -23,38 +23,47 @@ const PLANS = [
     id: 'essentiel' as const,
     name: 'Essentiel',
     price: 4.99,
-    multiplier: 2,
+    multiplier: 1.5,
     emoji: '⭐',
     color: '#2D5016',
     bg: '#EEF4E8',
     border: '#2D5016',
     badge: 'Populaire',
-    features: ['×2 points par euro', 'Scanner de tickets', 'Tableau de bord complet', 'Historique détaillé'],
+    features: ['×1,5 points par euro', 'Scanner de tickets', 'Tableau de bord complet', 'Historique détaillé'],
   },
   {
     id: 'engagement' as const,
     name: 'Engagement',
     price: 9.99,
-    multiplier: 4,
+    multiplier: 2,
     emoji: '🏆',
     color: '#E8832A',
     bg: '#FEF3E8',
     border: '#E8832A',
     badge: 'Meilleur impact',
-    features: ['×4 points par euro', 'Scanner de tickets', 'Tableau de bord complet', 'Historique détaillé', 'Badge Ambassadeur solidaire'],
+    features: ['×2 points par euro', 'Scanner de tickets', 'Tableau de bord complet', 'Historique détaillé', 'Badge Ambassadeur solidaire'],
   },
 ];
 
 type PlanId = 'free' | 'essentiel' | 'engagement';
 
-export default function SubscriptionsPage() {
+function SubscriptionsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<PlanId | null>(null);
   const [success, setSuccess] = useState<PlanId | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    // Retour depuis Stripe Checkout avec succès
+    const successTier = searchParams.get('success') as PlanId | null;
+    if (successTier) {
+      setSuccess(successTier);
+      setTimeout(() => setSuccess(null), 4000);
+    }
+  }, []);
 
   async function loadData() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,11 +79,30 @@ export default function SubscriptionsPage() {
     setUpgrading(planId);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('contributor_profiles').update({ subscription_tier: planId }).eq('profile_id', user.id);
-    setContributor((prev) => prev ? { ...prev, subscription_tier: planId } : prev);
+
+    // Downgrade vers free : pas de paiement, mise à jour directe
+    if (planId === 'free') {
+      await supabase.from('contributor_profiles').update({ subscription_tier: 'free' }).eq('profile_id', user.id);
+      setContributor((prev) => prev ? { ...prev, subscription_tier: 'free' } : prev);
+      setUpgrading(null);
+      setSuccess('free');
+      setTimeout(() => setSuccess(null), 3000);
+      return;
+    }
+
+    // Upgrade : Stripe Checkout
+    const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      body: { profile_id: user.id, tier: planId },
+    });
+
     setUpgrading(null);
-    setSuccess(planId);
-    setTimeout(() => setSuccess(null), 3000);
+
+    if (error || !data?.url) {
+      alert('Impossible de lancer le paiement. Réessayez.');
+      return;
+    }
+
+    window.location.href = data.url;
   }
 
   if (loading) {
@@ -210,11 +238,19 @@ export default function SubscriptionsPage() {
         })}
 
         <p className="text-xs text-gray-400 text-center px-4 pb-2">
-          Simulation — aucun paiement réel n'est traité pour le moment.
+          Paiement sécurisé par Stripe. Résiliable à tout moment.
         </p>
       </div>
 
       <BottomNav />
     </div>
+  );
+}
+
+export default function SubscriptionsPage() {
+  return (
+    <Suspense>
+      <SubscriptionsContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/lib/types';
@@ -12,23 +12,27 @@ const ROLES: { value: UserRole; label: string; emoji: string; desc: string }[] =
   { value: 'association', label: 'Association', emoji: '🤝', desc: 'Je distribue les paniers dans ma structure' },
 ];
 
-export default function SetupPage() {
+function SetupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [role, setRole] = useState<UserRole>('contributor');
   const [fullName, setFullName] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
   const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) setReferralCode(refCode.toUpperCase());
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/auth/login'); return; }
       setUserId(user.id);
       setUserEmail(user.email ?? '');
       if (user.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
 
-      // Si le profil existe déjà, rediriger directement vers le dashboard
       const { data: existing } = await supabase
         .from('profiles')
         .select('role')
@@ -38,7 +42,7 @@ export default function SetupPage() {
         window.location.href = `/dashboard/${existing.role === 'contributor' ? 'contributor' : existing.role === 'beneficiary' ? 'beneficiary' : 'association'}`;
       }
     });
-  }, [router]);
+  }, [router, searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,12 +51,12 @@ export default function SetupPage() {
     setLoading(true);
 
     try {
-      // Fonction SECURITY DEFINER — contourne RLS, gère les doublons
       const { error: rpcErr } = await supabase.rpc('create_user_profile', {
         p_user_id: userId,
         p_email: userEmail,
         p_full_name: fullName.trim(),
         p_role: role,
+        p_referral_code: referralCode.trim() || null,
       });
       if (rpcErr) throw rpcErr;
 
@@ -116,6 +120,25 @@ export default function SetupPage() {
             </div>
           </div>
 
+          {role === 'contributor' && (
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">
+                Code de parrainage <span className="text-gray-300 normal-case font-normal">(facultatif)</span>
+              </label>
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="Ex : X3K9PL"
+                maxLength={6}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016] font-mono tracking-widest"
+              />
+              {referralCode && (
+                <p className="text-xs text-[#2D5016] mt-1">+50 pts offerts à l'inscription !</p>
+              )}
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
               {error}
@@ -132,5 +155,13 @@ export default function SetupPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense>
+      <SetupForm />
+    </Suspense>
   );
 }
