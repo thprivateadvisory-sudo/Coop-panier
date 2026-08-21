@@ -32,16 +32,6 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'maskable',
       },
     ],
-    screenshots: [
-      {
-        src: '/screenshots/contributor.png',
-        sizes: '390x844',
-        type: 'image/png',
-        // @ts-expect-error — form_factor is valid but not yet in TS types
-        form_factor: 'narrow',
-        label: 'Tableau de bord contributeur',
-      },
-    ],
     shortcuts: [
       {
         name: 'Scanner un ticket',
