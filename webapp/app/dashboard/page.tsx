@@ -25,9 +25,10 @@ export default function DashboardRedirect() {
         const { error: profErr } = await supabase.from('profiles').insert(
           { id: user.id, email: user.email, full_name, role }
         );
-        // 23505 = unique_violation → already exists, that's fine
+        // 23505 = unique_violation → already exists, ignore
         if (profErr && profErr.code !== '23505') {
-          router.push('/auth/login'); return;
+          // INSERT policy missing or other DB error — redirect to setup
+          router.push('/auth/setup'); return;
         }
 
         if (role === 'contributor') {
@@ -38,11 +39,8 @@ export default function DashboardRedirect() {
           await supabase.from('beneficiary_profiles').insert(
             { profile_id: user.id, status: 'waitlist', baskets_received: 0 }
           );
-        } else if (role === 'association') {
-          await supabase.from('association_profiles').insert(
-            { profile_id: user.id, name: full_name }
-          );
         }
+        // association_profiles is created in /auth/setup (has required fields to fill)
 
         profile = { role };
       }
