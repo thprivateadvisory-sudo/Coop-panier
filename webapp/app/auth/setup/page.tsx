@@ -47,49 +47,19 @@ export default function SetupPage() {
     setLoading(true);
 
     try {
-      // 1. Créer le profil principal
-      const { error: profErr } = await supabase.from('profiles').insert({
-        id: userId,
-        email: userEmail,
-        full_name: fullName.trim(),
-        role,
+      // Fonction SECURITY DEFINER — contourne RLS, gère les doublons
+      const { error: rpcErr } = await supabase.rpc('create_user_profile', {
+        p_user_id: userId,
+        p_email: userEmail,
+        p_full_name: fullName.trim(),
+        p_role: role,
       });
-      // 23505 = profil déjà créé — on continue quand même
-      if (profErr && profErr.code !== '23505') throw profErr;
+      if (rpcErr) throw rpcErr;
 
-      // 2. Créer le profil spécifique au rôle
-      if (role === 'contributor') {
-        const { error: cErr } = await supabase.from('contributor_profiles').insert({
-          profile_id: userId,
-          subscription_tier: 'free',
-          points_available: 0,
-          points_total: 0,
-          tickets_scanned: 0,
-          baskets_funded: 0,
-        });
-        if (cErr && cErr.code !== '23505') throw cErr;
-        window.location.href = '/dashboard/contributor';
-
-      } else if (role === 'beneficiary') {
-        const { error: bErr } = await supabase.from('beneficiary_profiles').insert({
-          profile_id: userId,
-          status: 'waitlist',
-          baskets_received: 0,
-        });
-        if (bErr && bErr.code !== '23505') throw bErr;
-        window.location.href = '/dashboard/beneficiary';
-
-      } else {
-        const { error: aErr } = await supabase.from('association_profiles').insert({
-          profile_id: userId,
-          association_name: fullName.trim(),
-          address: '',
-          city: '',
-          postal_code: '',
-        });
-        if (aErr && aErr.code !== '23505') throw aErr;
-        window.location.href = '/dashboard/association';
-      }
+      window.location.href =
+        role === 'contributor' ? '/dashboard/contributor'
+        : role === 'beneficiary' ? '/dashboard/beneficiary'
+        : '/dashboard/association';
 
     } catch (err: any) {
       setError(err.message ?? 'Une erreur est survenue');
