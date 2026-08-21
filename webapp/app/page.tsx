@@ -31,7 +31,7 @@ export default function Home() {
         className="text-white px-6 pt-16 pb-36 relative overflow-hidden flex flex-col justify-between"
         style={{
           background: 'linear-gradient(160deg, #1e3a0f 0%, #2D5016 45%, #3D6B1F 100%)',
-          minHeight: '100svh',
+          minHeight: 'calc(100svh + 4rem)',
         }}
       >
         <div className="max-w-lg mx-auto w-full relative z-10 flex flex-col flex-1">
