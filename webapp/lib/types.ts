@@ -20,6 +20,9 @@ export interface ContributorProfile {
   subscription_expires_at?: string;
   tickets_scanned: number;
   baskets_funded: number;
+  referral_code?: string;
+  referred_by?: string;
+  stripe_customer_id?: string;
 }
 
 export interface BeneficiaryProfile {

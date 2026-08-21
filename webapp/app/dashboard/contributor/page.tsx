@@ -58,6 +58,7 @@ export default function ContributorDashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -206,7 +207,7 @@ export default function ContributorDashboard() {
             <div className="text-left flex-1">
               <p className="font-nunito font-black text-white text-xl leading-tight">Scanner un ticket</p>
               <p className="text-orange-100 text-sm">
-                +{10 * tierCfg.multi} pts par euro dépensé
+                +{tierCfg.multi} pt par euro dépensé
               </p>
             </div>
             <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -240,6 +241,36 @@ export default function ContributorDashboard() {
             </div>
           )}
         </div>
+
+        {/* Referral card */}
+        {contributor?.referral_code && (
+          <div className="bg-white rounded-2xl p-5 border border-gray-100">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Parrainez vos amis</p>
+            <p className="text-sm text-gray-600 mb-3">
+              Partagez votre code — votre ami reçoit <strong className="text-[#2D5016]">+50 pts</strong> et vous <strong className="text-[#2D5016]">+100 pts</strong> à son inscription.
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-[#EEF4E8] rounded-xl px-4 py-3 text-center">
+                <span className="font-mono font-black text-xl tracking-widest text-[#2D5016]">
+                  {contributor.referral_code}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/auth/setup?ref=${contributor.referral_code}`;
+                  navigator.clipboard.writeText(url).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  });
+                }}
+                className="px-4 py-3 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#2D5016' }}
+              >
+                {copied ? '✓ Copié' : 'Copier le lien'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Upgrade banner (free only) */}
         {tier === 'free' && (
