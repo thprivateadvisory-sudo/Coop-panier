@@ -124,11 +124,11 @@
       height: auto; object-fit: contain;
       display: block;
       filter: drop-shadow(0 32px 48px rgba(0,0,0,.18)) drop-shadow(0 8px 16px rgba(0,0,0,.10));
-      opacity: 0;
-      transition: opacity .3s ease;
       background: transparent;
+      /* Force un layer GPU pour éviter le carré sombre de Safari iOS */
+      transform: translateZ(0);
+      will-change: transform;
     }
-    .phone-img.loaded { opacity: 1; }
 
     /* STEPS */
     .section-steps { background: white; padding: 100px 40px; }
@@ -359,7 +359,7 @@
       </div>
       <!-- Phone Mockup -->
       <div class="phone-wrap">
-        <img src="phone-mockup.png" alt="Coop'Panier application mobile" class="phone-img" fetchpriority="high" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
+        <img src="phone-mockup.png" alt="Coop'Panier application mobile" class="phone-img" fetchpriority="high" decoding="sync">
       </div>
     </div>
   </section>
