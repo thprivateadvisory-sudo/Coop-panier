@@ -53,30 +53,25 @@ export default function LoginPage() {
         }
 
         if (data.user) {
-          const { error: profErr } = await supabase.from('profiles').upsert(
-            { id: data.user.id, email, full_name: fullName, role },
-            { onConflict: 'id' }
-          );
-          if (profErr) throw profErr;
+          const uid = data.user.id;
+          const isDup = (e: any) => e?.code === '23505';
+
+          const { error: profErr } = await supabase.from('profiles')
+            .insert({ id: uid, email, full_name: fullName, role });
+          if (profErr && !isDup(profErr)) throw profErr;
 
           if (role === 'contributor') {
-            const { error: e } = await supabase.from('contributor_profiles').upsert(
-              { profile_id: data.user.id, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 },
-              { onConflict: 'profile_id' }
-            );
-            if (e) throw e;
+            const { error: e } = await supabase.from('contributor_profiles')
+              .insert({ profile_id: uid, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 });
+            if (e && !isDup(e)) throw e;
           } else if (role === 'beneficiary') {
-            const { error: e } = await supabase.from('beneficiary_profiles').upsert(
-              { profile_id: data.user.id, status: 'waitlist', baskets_received: 0 },
-              { onConflict: 'profile_id' }
-            );
-            if (e) throw e;
+            const { error: e } = await supabase.from('beneficiary_profiles')
+              .insert({ profile_id: uid, status: 'waitlist', baskets_received: 0 });
+            if (e && !isDup(e)) throw e;
           } else if (role === 'association') {
-            const { error: e } = await supabase.from('association_profiles').upsert(
-              { profile_id: data.user.id, name: fullName },
-              { onConflict: 'profile_id' }
-            );
-            if (e) throw e;
+            const { error: e } = await supabase.from('association_profiles')
+              .insert({ profile_id: uid, name: fullName });
+            if (e && !isDup(e)) throw e;
           }
           router.push('/dashboard');
         }
