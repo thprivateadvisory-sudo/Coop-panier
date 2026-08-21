@@ -22,11 +22,21 @@ export default function SetupPage() {
   const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/auth/login'); return; }
       setUserId(user.id);
       setUserEmail(user.email ?? '');
       if (user.user_metadata?.full_name) setFullName(user.user_metadata.full_name);
+
+      // Si le profil existe déjà, rediriger directement vers le dashboard
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (existing?.role) {
+        window.location.href = `/dashboard/${existing.role === 'contributor' ? 'contributor' : existing.role === 'beneficiary' ? 'beneficiary' : 'association'}`;
+      }
     });
   }, [router]);
 
@@ -37,51 +47,58 @@ export default function SetupPage() {
     setLoading(true);
 
     try {
-      const { error: profErr } = await supabase.from('profiles').upsert({
+      // 1. Créer le profil principal
+      const { error: profErr } = await supabase.from('profiles').insert({
         id: userId,
         email: userEmail,
         full_name: fullName.trim(),
         role,
       });
-      if (profErr) throw profErr;
+      // 23505 = profil déjà créé — on continue quand même
+      if (profErr && profErr.code !== '23505') throw profErr;
 
+      // 2. Créer le profil spécifique au rôle
       if (role === 'contributor') {
-        const { error: cErr } = await supabase.from('contributor_profiles').upsert({
+        const { error: cErr } = await supabase.from('contributor_profiles').insert({
           profile_id: userId,
           subscription_tier: 'free',
           points_available: 0,
           points_total: 0,
           tickets_scanned: 0,
           baskets_funded: 0,
-        }, { onConflict: 'profile_id' });
-        if (cErr) throw cErr;
+        });
+        if (cErr && cErr.code !== '23505') throw cErr;
+        window.location.href = '/dashboard/contributor';
+
       } else if (role === 'beneficiary') {
-        const { error: bErr } = await supabase.from('beneficiary_profiles').upsert({
+        const { error: bErr } = await supabase.from('beneficiary_profiles').insert({
           profile_id: userId,
           status: 'waitlist',
           baskets_received: 0,
-        }, { onConflict: 'profile_id' });
-        if (bErr) throw bErr;
-      } else if (role === 'association') {
-        const { error: aErr } = await supabase.from('association_profiles').upsert({
+        });
+        if (bErr && bErr.code !== '23505') throw bErr;
+        window.location.href = '/dashboard/beneficiary';
+
+      } else {
+        const { error: aErr } = await supabase.from('association_profiles').insert({
           profile_id: userId,
-          name: fullName.trim(),
-        }, { onConflict: 'profile_id' });
-        if (aErr) throw aErr;
+          association_name: fullName.trim(),
+          address: '',
+          city: '',
+          postal_code: '',
+        });
+        if (aErr && aErr.code !== '23505') throw aErr;
+        window.location.href = '/dashboard/association';
       }
 
-      if (role === 'contributor') router.push('/dashboard/contributor');
-      else if (role === 'beneficiary') router.push('/dashboard/beneficiary');
-      else router.push('/dashboard/association');
     } catch (err: any) {
       setError(err.message ?? 'Une erreur est survenue');
-    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6 bg-[#F8F7F4]">
       <div className="text-center">
         <Image src="/logo.png" alt="Coop'Panier" width={220} height={80} className="mx-auto" priority />
         <p className="text-gray-500 text-sm mt-2">Finalisons votre inscription</p>

@@ -46,7 +46,7 @@ export default function LoginPage() {
         if (error) throw error;
 
         if (data.user) {
-          window.location.href = '/dashboard';
+          window.location.href = '/auth/setup';
         }
 
       } else {
