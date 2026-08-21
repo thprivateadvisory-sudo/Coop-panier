@@ -14,6 +14,7 @@
   <meta property="og:description" content="Chaque ticket de caisse devient un acte solidaire.">
   <meta property="og:locale" content="fr_FR">
   <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="phone-mockup.png" as="image" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -123,7 +124,11 @@
       height: auto; object-fit: contain;
       display: block;
       filter: drop-shadow(0 32px 48px rgba(0,0,0,.18)) drop-shadow(0 8px 16px rgba(0,0,0,.10));
+      opacity: 0;
+      transition: opacity .3s ease;
+      background: transparent;
     }
+    .phone-img.loaded { opacity: 1; }
 
     /* STEPS */
     .section-steps { background: white; padding: 100px 40px; }
@@ -277,7 +282,7 @@
       .hero { padding: 100px 24px 60px; min-height: auto; }
       .hero-inner { grid-template-columns: 1fr; gap: 48px; }
       .phone-wrap { order: -1; padding: 0; }
-      .phone-img { max-width: 320px; max-height: 70vw; }
+      .phone-img { max-width: 320px; max-height: 70vw; background: transparent; }
       .steps-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
       .roles-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
       .impact-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
@@ -354,7 +359,7 @@
       </div>
       <!-- Phone Mockup -->
       <div class="phone-wrap">
-        <img src="phone-mockup.png" alt="Coop'Panier application mobile" class="phone-img">
+        <img src="phone-mockup.png" alt="Coop'Panier application mobile" class="phone-img" fetchpriority="high" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       </div>
     </div>
   </section>
