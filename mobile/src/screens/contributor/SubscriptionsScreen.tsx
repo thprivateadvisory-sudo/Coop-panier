@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
@@ -78,13 +79,12 @@ export function SubscriptionsScreen({ navigation }: Props) {
 
       if (error) throw error;
 
-      // Ouvre le lien Stripe Checkout — en prod, utiliser expo-linking
       Alert.alert(
-        'Redirection Stripe',
-        `Vous allez être redirigé vers la page de paiement sécurisée pour l'abonnement ${plan.name}.`,
+        'Paiement sécurisé',
+        `Vous allez être redirigé vers la page de paiement Stripe pour l'abonnement ${plan.name}.`,
         [
           { text: 'Annuler', style: 'cancel' },
-          { text: 'Continuer', onPress: () => { /* Linking.openURL(data.url) */ } },
+          { text: 'Continuer', onPress: () => Linking.openURL(data.url) },
         ]
       );
     } catch {
@@ -143,7 +143,7 @@ export function SubscriptionsScreen({ navigation }: Props) {
         <View style={styles.freeCard}>
           <Text style={styles.freePlanTitle}>Gratuit — toujours</Text>
           <Text style={styles.freePlanDesc}>
-            Sans abonnement, vous gagnez 10 points par euro d'achat scanné.
+            Sans abonnement, vous gagnez 1 point par euro d'achat scanné.
             Vous pouvez financer des paniers à votre rythme.
           </Text>
         </View>
