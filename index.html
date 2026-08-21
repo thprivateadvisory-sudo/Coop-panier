@@ -69,7 +69,7 @@
     }
     .hero-inner {
       max-width: 1200px; margin: 0 auto; width: 100%;
-      display: grid; grid-template-columns: 1fr 460px; gap: 60px; align-items: center;
+      display: grid; grid-template-columns: 1fr 420px; gap: 80px; align-items: center;
     }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
@@ -112,48 +112,69 @@
     }
     .hero-stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-    /* PHONE MOCKUP */
+    /* PHONE MOCKUP — iPhone 15 style */
     .phone-wrap {
       display: flex; justify-content: center; align-items: center;
-      perspective: 1400px;
-      padding: 40px 60px 40px 20px;
+      perspective: 1300px;
+      padding: 40px 70px 40px 10px;
     }
+    /* Outer silver titanium frame */
     .phone {
-      width: 260px; height: 530px;
-      border-radius: 46px;
-      padding: 11px;
+      width: 256px; height: 540px;
+      border-radius: 52px;
+      padding: 3px;
       position: relative;
-      transform: rotateY(-14deg) rotateX(4deg) rotateZ(1.5deg);
+      transform: rotateY(-13deg) rotateX(4deg) rotateZ(1.2deg);
       transform-style: preserve-3d;
-      background: linear-gradient(160deg, #e8eaed 0%, #d0d3d8 30%, #c5c8cd 60%, #d8dade 100%);
+      background: linear-gradient(148deg,
+        #f4f4f4 0%, #e8eaed 15%, #d0d3d9 40%,
+        #bfc2c8 60%, #d2d5db 80%, #eceef0 100%);
       box-shadow:
-        0 50px 100px rgba(0,0,0,.28),
-        0 20px 40px rgba(0,0,0,.18),
-        inset 0 1px 0 rgba(255,255,255,.6),
-        inset 0 -1px 0 rgba(0,0,0,.15);
+        42px 60px 100px rgba(0,0,0,.30),
+        20px 28px 48px rgba(0,0,0,.18),
+        6px 8px 16px rgba(0,0,0,.10),
+        inset 0 1.5px 0 rgba(255,255,255,.9),
+        inset 0 -1px 0 rgba(0,0,0,.12),
+        inset 1px 0 0 rgba(255,255,255,.4);
     }
+    /* Power button (right) */
     .phone::before {
       content: '';
-      position: absolute; right: -4px; top: 100px;
-      width: 4px; height: 60px; border-radius: 0 3px 3px 0;
-      background: linear-gradient(to right, #b0b3b8, #d0d3d8);
+      position: absolute; right: -3.5px; top: 136px;
+      width: 3.5px; height: 68px; border-radius: 0 2.5px 2.5px 0;
+      background: linear-gradient(to right, #b8bcc4, #d4d7dd);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
     }
+    /* Volume + silent switch (left) */
     .phone::after {
       content: '';
-      position: absolute; left: -4px; top: 90px;
-      width: 4px; height: 80px; border-radius: 3px 0 0 3px;
-      background: linear-gradient(to left, #b0b3b8, #d0d3d8);
-      box-shadow: 0 -44px 0 rgba(176,179,184,1), 0 -64px 0 rgba(176,179,184,1);
+      position: absolute; left: -3.5px; top: 84px;
+      width: 3.5px; border-radius: 2.5px 0 0 2.5px;
+      height: 24px;
+      background: linear-gradient(to left, #b8bcc4, #d4d7dd);
+      box-shadow:
+        0 38px 0 rgba(184,188,196,1),    /* vol+ */
+        0 38px 0 0 rgba(184,188,196,1),
+        0 92px 0 rgba(184,188,196,1);    /* vol- */
+    }
+    /* Inner dark rim (the black bezel) */
+    .phone-rim {
+      background: #1a1d26;
+      border-radius: 49px;
+      height: 100%;
+      padding: 11px;
+      position: relative;
     }
     .phone-screen {
-      background: #f5f5f5; border-radius: 36px;
+      background: #f4f5f4; border-radius: 39px;
       height: 100%; overflow: hidden;
       display: flex; flex-direction: column;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
     }
+    /* Dynamic Island */
     .phone-notch {
-      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
-      width: 80px; height: 24px; background: #0a0a0a; border-radius: 20px; z-index: 10;
+      position: absolute; top: 13px; left: 50%; transform: translateX(-50%);
+      width: 86px; height: 25px;
+      background: #0a0a0a; border-radius: 20px; z-index: 10;
     }
     .phone-header {
       background: var(--green); padding: 52px 18px 20px;
@@ -343,8 +364,8 @@
       .nav-mobile-menu { display: block; }
       .hero { padding: 100px 24px 60px; min-height: auto; }
       .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-      .phone-wrap { order: -1; padding: 20px 20px 0; perspective: 800px; }
-      .phone { width: 210px; height: 430px; transform: rotateY(-6deg) rotateX(2deg); }
+      .phone-wrap { order: -1; padding: 20px 30px 0 0; perspective: 900px; }
+      .phone { width: 200px; height: 422px; transform: rotateY(-8deg) rotateX(2deg) rotateZ(.8deg); }
       .steps-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
       .roles-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
       .impact-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
@@ -422,6 +443,7 @@
       <!-- Phone Mockup -->
       <div class="phone-wrap">
         <div class="phone">
+          <div class="phone-rim">
           <div class="phone-notch"></div>
           <div class="phone-screen">
             <div class="phone-header">
@@ -485,6 +507,7 @@
               </div>
             </div>
           </div>
+          </div><!-- /.phone-rim -->
         </div>
       </div>
     </div>
