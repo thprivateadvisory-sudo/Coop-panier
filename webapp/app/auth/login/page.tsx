@@ -45,34 +45,7 @@ export default function LoginPage() {
         });
         if (error) throw error;
 
-        // No session = email already used OR confirmation required
-        if (!data.session) {
-          setInfo('Un email de confirmation a été envoyé. Vérifiez votre boîte mail, ou connectez-vous si vous avez déjà un compte.');
-          setLoading(false);
-          return;
-        }
-
         if (data.user) {
-          const uid = data.user.id;
-          const isDup = (e: any) => e?.code === '23505';
-
-          const { error: profErr } = await supabase.from('profiles')
-            .insert({ id: uid, email, full_name: fullName, role });
-          if (profErr && !isDup(profErr)) throw profErr;
-
-          if (role === 'contributor') {
-            const { error: e } = await supabase.from('contributor_profiles')
-              .insert({ profile_id: uid, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 });
-            if (e && !isDup(e)) throw e;
-          } else if (role === 'beneficiary') {
-            const { error: e } = await supabase.from('beneficiary_profiles')
-              .insert({ profile_id: uid, status: 'waitlist', baskets_received: 0 });
-            if (e && !isDup(e)) throw e;
-          } else if (role === 'association') {
-            const { error: e } = await supabase.from('association_profiles')
-              .insert({ profile_id: uid, name: fullName });
-            if (e && !isDup(e)) throw e;
-          }
           router.push('/dashboard');
         }
 
