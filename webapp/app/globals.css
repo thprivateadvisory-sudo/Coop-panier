@@ -1,5 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
+
+/* View Transitions API — smooth page navigation in Chrome 126+ */
+@view-transition {
+  navigation: auto;
+}
 
 :root {
   --vert: #2D5016;

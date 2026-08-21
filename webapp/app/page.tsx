@@ -1,29 +1,7 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 
 export default function Home() {
-  const router = useRouter();
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.push('/dashboard');
-      else setChecking(false);
-    });
-  }, [router]);
-
-  if (checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F4]">
-        <div className="w-10 h-10 border-4 border-[#2D5016] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F8F7F4] flex flex-col">
       {/* Hero — fills the full viewport */}
@@ -49,18 +27,18 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-col gap-3">
-            <button
-              onClick={() => router.push('/auth/login')}
-              className="w-full bg-white text-[#2D5016] font-nunito font-black py-4 rounded-2xl text-lg hover:bg-green-50 transition-colors shadow-lg"
+            <Link
+              href="/auth/login"
+              className="block w-full bg-white text-[#2D5016] font-nunito font-black py-4 rounded-2xl text-lg hover:bg-green-50 transition-colors shadow-lg text-center"
             >
               Commencer gratuitement
-            </button>
-            <button
-              onClick={() => router.push('/auth/login')}
-              className="w-full border-2 border-white/30 text-white font-semibold py-3.5 rounded-2xl text-base hover:bg-white/10 transition-colors"
+            </Link>
+            <Link
+              href="/auth/login"
+              className="block w-full border-2 border-white/30 text-white font-semibold py-3.5 rounded-2xl text-base hover:bg-white/10 transition-colors text-center"
             >
-              J'ai déjà un compte
-            </button>
+              J&apos;ai déjà un compte
+            </Link>
           </div>
         </div>
 
@@ -129,13 +107,13 @@ export default function Home() {
           </div>
         </div>
 
-        <button
-          onClick={() => router.push('/auth/login')}
-          className="w-full font-nunito font-black py-4 rounded-2xl text-lg text-white mt-2"
+        <Link
+          href="/auth/login"
+          className="block w-full font-nunito font-black py-4 rounded-2xl text-lg text-white mt-2 text-center"
           style={{ background: 'linear-gradient(135deg, #E8832A, #F09840)' }}
         >
-          Rejoindre Coop'Panier
-        </button>
+          Rejoindre Coop&apos;Panier
+        </Link>
 
         <p className="text-center text-xs text-gray-400 pb-4">
           Gratuit · Sans engagement · Impact immédiat
