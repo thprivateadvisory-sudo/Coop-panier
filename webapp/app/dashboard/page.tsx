@@ -17,30 +17,30 @@ export default function DashboardRedirect() {
         .eq('id', user.id)
         .single();
 
-      // Profile missing — happens when INSERT failed at signup (e.g. before RLS fix).
-      // Recover using metadata stored in the auth user.
+      // Profile missing — create it from auth metadata (stored at signup).
       if (!profile && user.user_metadata?.role) {
         const role = user.user_metadata.role as string;
         const full_name = (user.user_metadata.full_name as string) ?? user.email ?? '';
 
-        await supabase.from('profiles').upsert(
-          { id: user.id, email: user.email, full_name, role },
-          { onConflict: 'id' }
+        const { error: profErr } = await supabase.from('profiles').insert(
+          { id: user.id, email: user.email, full_name, role }
         );
+        // 23505 = unique_violation → already exists, that's fine
+        if (profErr && profErr.code !== '23505') {
+          router.push('/auth/login'); return;
+        }
 
         if (role === 'contributor') {
-          await supabase.from('contributor_profiles').upsert(
-            { profile_id: user.id, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 },
-            { onConflict: 'profile_id' }
+          await supabase.from('contributor_profiles').insert(
+            { profile_id: user.id, subscription_tier: 'free', points_available: 0, points_total: 0, tickets_scanned: 0, baskets_funded: 0 }
           );
         } else if (role === 'beneficiary') {
-          await supabase.from('beneficiary_profiles').upsert(
-            { profile_id: user.id, status: 'waitlist', baskets_received: 0 },
-            { onConflict: 'profile_id' }
+          await supabase.from('beneficiary_profiles').insert(
+            { profile_id: user.id, status: 'waitlist', baskets_received: 0 }
           );
         } else if (role === 'association') {
-          await supabase.from('association_profiles').upsert(
-            { profile_id: user.id, name: full_name }, { onConflict: 'profile_id' }
+          await supabase.from('association_profiles').insert(
+            { profile_id: user.id, name: full_name }
           );
         }
 
