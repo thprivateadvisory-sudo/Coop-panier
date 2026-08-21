@@ -1,5 +1,6 @@
 'use client';
-import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const TABS = [
   { icon: '🏠', label: 'Accueil',    href: '/dashboard/contributor' },
@@ -10,7 +11,6 @@ const TABS = [
 ] as const;
 
 export function BottomNav() {
-  const router = useRouter();
   const pathname = usePathname();
 
   return (
@@ -21,9 +21,10 @@ export function BottomNav() {
       {TABS.map((tab) => {
         const active = pathname === tab.href;
         return (
-          <button
+          <Link
             key={tab.href}
-            onClick={() => router.push(tab.href)}
+            href={tab.href}
+            prefetch
             className={`flex-1 flex flex-col items-center pt-3 pb-2 gap-0.5 transition-all active:scale-95 ${
               active ? 'text-[#2D5016]' : 'text-gray-400'
             }`}
@@ -33,7 +34,7 @@ export function BottomNav() {
             </span>
             <span className={`text-xs ${active ? 'font-semibold' : 'font-medium'}`}>{tab.label}</span>
             <div className={`h-1 w-5 rounded-full transition-all duration-200 ${active ? 'bg-[#2D5016]' : 'bg-transparent'}`} />
-          </button>
+          </Link>
         );
       })}
     </nav>
