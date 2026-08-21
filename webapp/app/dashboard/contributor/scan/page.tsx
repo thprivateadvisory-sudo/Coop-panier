@@ -9,21 +9,62 @@ const POINTS_PER_EURO = 10;
 const TIER_MULTIPLIER: Record<string, number> = { free: 1, essentiel: 2, engagement: 4 };
 const CONFETTI_COLORS = ['#2D5016', '#E8832A', '#FFD700', '#FF6B6B', '#4ECDC4', '#A8E6CF'];
 
-type Step = 'camera' | 'amount' | 'processing' | 'success';
+// Icônes visuelles par enseigne
+const STORE_ICONS: Record<string, string> = {
+  'E.Leclerc': '🔵',
+  'Lidl': '🟡',
+  'Carrefour': '🔴',
+  'Carrefour Market': '🔴',
+  'Carrefour City': '🔴',
+  'Carrefour Express': '🔴',
+  'Auchan': '🟠',
+  'Intermarché': '🔴',
+  'Monoprix': '🟣',
+  'Franprix': '🟠',
+  'Super U': '🔵',
+  'Hyper U': '🔵',
+  'U Express': '🔵',
+  'Marché U': '🔵',
+  'Casino': '🟤',
+  'Géant Casino': '🟤',
+  'Petit Casino': '🟤',
+  'Casino Supermarché': '🟤',
+  'Picard': '🔵',
+  'Biocoop': '🟢',
+  'Naturalia': '🟢',
+  'Leader Price': '🟡',
+  'Netto': '🔴',
+  'Cora': '🟠',
+  'Grand Frais': '🟢',
+};
+
+type Step = 'camera' | 'recognizing' | 'confirm' | 'submitting' | 'success';
+
+interface OcrResult {
+  storeChain: string | null;
+  storeName: string | null;
+  detectedAmount: number | null;
+  purchaseDate: string | null;
+  confidence: number;
+  imageUrl: string;
+  ocrAvailable: boolean;
+}
 
 function ConfettiOverlay() {
-  const pieces = useMemo(() =>
-    Array.from({ length: 28 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 0.6,
-      duration: 1.8 + Math.random() * 1.4,
-      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      width: 6 + Math.floor(Math.random() * 8),
-      height: 6 + Math.floor(Math.random() * 8),
-      skew: Math.random() > 0.5 ? `skewX(${Math.random() * 20 - 10}deg)` : '',
-    })),
-  []);
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 0.6,
+        duration: 1.8 + Math.random() * 1.4,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        width: 6 + Math.floor(Math.random() * 8),
+        height: 6 + Math.floor(Math.random() * 8),
+        skew: Math.random() > 0.5 ? `skewX(${Math.random() * 20 - 10}deg)` : '',
+      })),
+    []
+  );
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-50" aria-hidden>
@@ -55,6 +96,7 @@ export default function ScanPage() {
 
   const [step, setStep] = useState<Step>('camera');
   const [capturedImage, setCapturedImage] = useState('');
+  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [amount, setAmount] = useState('');
   const [amountError, setAmountError] = useState('');
   const [submitError, setSubmitError] = useState('');
@@ -72,18 +114,32 @@ export default function ScanPage() {
   }, []);
 
   async function loadUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/auth/login'); return; }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
     setUserId(user.id);
     const { data } = await supabase
-      .from('contributor_profiles').select('*').eq('profile_id', user.id).single();
+      .from('contributor_profiles')
+      .select('*')
+      .eq('profile_id', user.id)
+      .single();
     setContributor(data);
   }
 
   async function startCamera() {
+    setCameraReady(false);
     try {
+      // Portrait : hauteur idéale > largeur
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1080 },
+          height: { ideal: 1920 },
+        },
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -106,9 +162,10 @@ export default function ScanPage() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d')?.drawImage(video, 0, 0);
-    setCapturedImage(canvas.toDataURL('image/jpeg', 0.85));
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    setCapturedImage(dataUrl);
     stopCamera();
-    setStep('amount');
+    analyzeImage(dataUrl);
   }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -116,76 +173,123 @@ export default function ScanPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setCapturedImage(ev.target?.result as string);
+      const dataUrl = ev.target?.result as string;
+      setCapturedImage(dataUrl);
       stopCamera();
-      setStep('amount');
+      analyzeImage(dataUrl);
     };
     reader.readAsDataURL(file);
   }
 
+  async function analyzeImage(dataUrl: string) {
+    setStep('recognizing');
+    try {
+      const resp = await fetch('/api/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: dataUrl, contributorId: userId }),
+      });
+      const result: OcrResult = await resp.json();
+      setOcrResult(result);
+      if (result.detectedAmount !== null) {
+        setAmount(result.detectedAmount.toFixed(2).replace('.', ','));
+      }
+    } catch {
+      // En cas d'erreur réseau, on passe à la saisie manuelle
+      setOcrResult(null);
+    }
+    setStep('confirm');
+  }
+
   async function submitScan() {
     const euros = parseFloat(amount.replace(',', '.'));
-    if (isNaN(euros) || euros <= 0) { setAmountError('Entrez un montant valide (ex: 23,50)'); return; }
-    if (euros > 1000) { setAmountError('Montant trop élevé'); return; }
+    if (isNaN(euros) || euros <= 0) {
+      setAmountError('Entrez un montant valide (ex: 23,50)');
+      return;
+    }
+    if (euros > 1000) {
+      setAmountError('Montant trop élevé');
+      return;
+    }
     setAmountError('');
     setSubmitError('');
-    setStep('processing');
+    setStep('submitting');
 
     const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
     const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
 
-    // credit_points() est SECURITY DEFINER — contourne RLS, atomique
+    // Stocker le ticket dans receipts (data business)
+    await supabase.from('receipts').insert({
+      contributor_id: userId,
+      image_url: ocrResult?.imageUrl || 'manual',
+      store_name: ocrResult?.storeName ?? null,
+      total_amount: euros,
+      purchase_date: ocrResult?.purchaseDate ?? null,
+      points_earned: earned,
+      status: 'validated',
+      ocr_confidence: ocrResult?.confidence ?? null,
+    });
+
+    // Créditer les points
     const { error: rpcErr } = await supabase.rpc('credit_points', {
       p_profile_id: userId,
       p_amount: earned,
       p_type: 'earn_scan',
-      p_description: `Ticket de ${euros.toFixed(2)} €`,
+      p_description: `Ticket ${ocrResult?.storeName ?? 'magasin'} — ${euros.toFixed(2)} €`,
     });
 
     if (rpcErr) {
       setSubmitError(rpcErr.message ?? 'Erreur inconnue');
-      setStep('amount');
+      setStep('confirm');
       return;
     }
 
-    // Lire les valeurs fraîches après mise à jour par credit_points()
+    // Lire solde frais
     const { data: fresh } = await supabase
       .from('contributor_profiles')
       .select('points_total, points_available')
       .eq('profile_id', userId)
       .single();
 
-    const newPointsTotal = fresh?.points_total ?? 0;
+    const newTotal = fresh?.points_total ?? 0;
     const newAvailable = fresh?.points_available ?? 0;
-    const newBasketsFunded = Math.floor(newPointsTotal / 500);
 
-    // Mettre à jour baskets_funded (champ calculé, nécessite UPDATE policy)
-    await supabase.from('contributor_profiles')
-      .update({ baskets_funded: newBasketsFunded })
+    await supabase
+      .from('contributor_profiles')
+      .update({ baskets_funded: Math.floor(newTotal / 500) })
       .eq('profile_id', userId);
 
     setPointsEarned(earned);
     setNewPointsAvailable(newAvailable);
-    await new Promise((r) => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, 800));
     setStep('success');
   }
 
-  if (step === 'processing') {
+  // ── PROCESSING ──────────────────────────────────────────────
+  if (step === 'recognizing' || step === 'submitting') {
+    const label =
+      step === 'recognizing' ? 'Reconnaissance du ticket…' : 'Enregistrement…';
     return (
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col items-center justify-center gap-5">
         <div className="w-16 h-16 border-4 border-[#2D5016] border-t-transparent rounded-full animate-spin" />
-        <p className="font-nunito font-bold text-[#2D5016] text-lg">Analyse du ticket…</p>
+        <p className="font-nunito font-bold text-[#2D5016] text-lg">{label}</p>
+        {step === 'recognizing' && (
+          <p className="text-gray-400 text-sm">Analyse OCR en cours…</p>
+        )}
       </div>
     );
   }
 
+  // ── SUCCESS ──────────────────────────────────────────────────
   if (step === 'success') {
     const tierMulti = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
+    const storeIcon = ocrResult?.storeChain
+      ? STORE_ICONS[ocrResult.storeChain] ?? '🏪'
+      : '🏪';
     return (
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col items-center justify-center p-6 gap-6">
         <ConfettiOverlay />
         <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-md border border-gray-100 relative z-10">
-          {/* Success icon */}
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
             style={{ background: 'linear-gradient(135deg, #2D5016, #4A8025)' }}
@@ -193,27 +297,41 @@ export default function ScanPage() {
             <span className="text-4xl">🎉</span>
           </div>
 
-          <h2 className="font-nunito font-black text-2xl text-gray-900 mb-1">Ticket validé !</h2>
-          <p className="text-gray-400 text-sm mb-6">Vos points ont été crédités instantanément</p>
+          <h2 className="font-nunito font-black text-2xl text-gray-900 mb-1">
+            Ticket validé !
+          </h2>
 
-          {/* Points earned */}
+          {ocrResult?.storeName && (
+            <p className="text-gray-500 text-sm mb-4">
+              {storeIcon} {ocrResult.storeName}
+            </p>
+          )}
+
           <div
             className="rounded-2xl p-5 mb-4"
             style={{ background: 'linear-gradient(135deg, #EEF4E8, #D8ECC8)' }}
           >
-            <p className="text-xs font-semibold text-[#2D5016] uppercase tracking-wide mb-1">Points gagnés</p>
-            <p className="font-nunito font-black text-6xl text-[#2D5016]">+{pointsEarned.toLocaleString('fr-FR')}</p>
+            <p className="text-xs font-semibold text-[#2D5016] uppercase tracking-wide mb-1">
+              Points gagnés
+            </p>
+            <p className="font-nunito font-black text-6xl text-[#2D5016]">
+              +{pointsEarned.toLocaleString('fr-FR')}
+            </p>
             {tierMulti > 1 && (
               <p className="text-xs text-gray-500 mt-1.5">
-                Multiplicateur ×{tierMulti} — abonnement{' '}
-                <span className="font-semibold capitalize">{contributor?.subscription_tier}</span>
+                Multiplicateur ×{tierMulti} —{' '}
+                <span className="font-semibold capitalize">
+                  {contributor?.subscription_tier}
+                </span>
               </p>
             )}
           </div>
 
           <p className="text-xs text-gray-400 mb-6">
             Solde disponible :{' '}
-            <strong className="text-gray-600">{newPointsAvailable.toLocaleString('fr-FR')} pts</strong>
+            <strong className="text-gray-600">
+              {newPointsAvailable.toLocaleString('fr-FR')} pts
+            </strong>
           </p>
 
           <div className="flex flex-col gap-3">
@@ -227,6 +345,7 @@ export default function ScanPage() {
             <button
               onClick={() => {
                 setCapturedImage('');
+                setOcrResult(null);
                 setAmount('');
                 setAmountError('');
                 setStep('camera');
@@ -242,10 +361,21 @@ export default function ScanPage() {
     );
   }
 
-  if (step === 'amount') {
-    const previewPts = amount && !isNaN(parseFloat(amount.replace(',', '.'))) && parseFloat(amount.replace(',', '.')) > 0
-      ? Math.round(parseFloat(amount.replace(',', '.')) * POINTS_PER_EURO * TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'])
-      : null;
+  // ── CONFIRM ──────────────────────────────────────────────────
+  if (step === 'confirm') {
+    const previewPts =
+      amount && !isNaN(parseFloat(amount.replace(',', '.'))) && parseFloat(amount.replace(',', '.')) > 0
+        ? Math.round(
+            parseFloat(amount.replace(',', '.')) *
+              POINTS_PER_EURO *
+              TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free']
+          )
+        : null;
+
+    const storeIcon = ocrResult?.storeChain
+      ? STORE_ICONS[ocrResult.storeChain] ?? '🏪'
+      : '🏪';
+    const confidencePct = ocrResult ? Math.round(ocrResult.confidence * 100) : 0;
 
     return (
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col">
@@ -254,25 +384,71 @@ export default function ScanPage() {
           style={{ background: 'linear-gradient(135deg, #2D5016, #3D6B1F)' }}
         >
           <button
-            onClick={() => { setStep('camera'); startCamera(); }}
+            onClick={() => {
+              setStep('camera');
+              setOcrResult(null);
+              setAmount('');
+              startCamera();
+            }}
             className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl"
           >
             ‹
           </button>
-          <h1 className="font-nunito font-black text-lg">Montant du ticket</h1>
+          <h1 className="font-nunito font-black text-lg">Confirmer le ticket</h1>
         </div>
 
-        <div className="flex-1 px-6 pt-6 flex flex-col gap-5 max-w-lg mx-auto w-full pb-8">
+        <div className="flex-1 px-5 pt-5 flex flex-col gap-4 max-w-lg mx-auto w-full pb-8">
+          {/* Aperçu ticket */}
           {capturedImage && (
-            <div className="rounded-2xl overflow-hidden border border-gray-200 max-h-44 flex items-center justify-center bg-gray-50">
-              <img src={capturedImage} alt="Ticket" className="w-full object-contain max-h-44" />
+            <div className="rounded-2xl overflow-hidden border border-gray-200 max-h-40 flex items-center justify-center bg-gray-50">
+              <img
+                src={capturedImage}
+                alt="Ticket"
+                className="w-full object-contain max-h-40"
+              />
             </div>
           )}
 
+          {/* Magasin détecté */}
+          {ocrResult && (
+            <div className="bg-white rounded-2xl p-4 border border-gray-100 flex items-center gap-4">
+              <span className="text-3xl">{ocrResult.storeName ? storeIcon : '❓'}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  Magasin reconnu
+                </p>
+                <p className="font-nunito font-black text-gray-900 truncate">
+                  {ocrResult.storeName ?? 'Non identifié'}
+                </p>
+              </div>
+              <span
+                className="text-xs font-bold px-2 py-1 rounded-full"
+                style={{
+                  background: confidencePct >= 80 ? '#EEF4E8' : '#FEF3E8',
+                  color: confidencePct >= 80 ? '#2D5016' : '#E8832A',
+                }}
+              >
+                {confidencePct}%
+              </span>
+            </div>
+          )}
+
+          {!ocrResult?.ocrAvailable && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+              Reconnaissance automatique non disponible — saisissez le montant manuellement.
+            </div>
+          )}
+
+          {/* Montant */}
           <div className="bg-white rounded-2xl p-6 border border-gray-100">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 block">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block">
               Montant total du ticket (€)
             </label>
+            {ocrResult?.detectedAmount !== null && ocrResult?.detectedAmount !== undefined && (
+              <p className="text-xs text-[#2D5016] mb-3">
+                ✓ Montant détecté automatiquement — vérifiez et corrigez si besoin
+              </p>
+            )}
             <div className="flex items-center gap-3">
               <span className="text-2xl font-nunito font-black text-gray-300">€</span>
               <input
@@ -285,7 +461,7 @@ export default function ScanPage() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="flex-1 text-3xl font-nunito font-black text-[#2D5016] focus:outline-none bg-transparent"
-                autoFocus
+                autoFocus={!ocrResult?.detectedAmount}
               />
             </div>
             {amountError && <p className="text-red-500 text-xs mt-2">{amountError}</p>}
@@ -314,9 +490,10 @@ export default function ScanPage() {
     );
   }
 
-  // Camera step
+  // ── CAMERA ───────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-black flex flex-col">
+      {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 pt-12 pb-4">
         <button
           onClick={() => router.push('/dashboard/contributor')}
@@ -328,6 +505,7 @@ export default function ScanPage() {
         <div className="w-10" />
       </div>
 
+      {/* Viewfinder */}
       <div className="flex-1 relative flex items-center justify-center">
         {cameraError ? (
           <div className="text-center px-8">
@@ -336,23 +514,49 @@ export default function ScanPage() {
           </div>
         ) : (
           <>
-            <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
-            <div className="relative z-10 w-72 h-48">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Cadre vertical — format ticket de caisse */}
+            <div className="relative z-10 w-56 h-[400px]">
+              {/* Fond semi-transparent hors cadre */}
               <div className="absolute inset-0 border-2 border-white/30 rounded-2xl" />
+
+              {/* Coins blancs */}
               <div className="absolute -top-0.5 -left-0.5 w-7 h-7 border-t-4 border-l-4 border-white rounded-tl-xl" />
               <div className="absolute -top-0.5 -right-0.5 w-7 h-7 border-t-4 border-r-4 border-white rounded-tr-xl" />
               <div className="absolute -bottom-0.5 -left-0.5 w-7 h-7 border-b-4 border-l-4 border-white rounded-bl-xl" />
               <div className="absolute -bottom-0.5 -right-0.5 w-7 h-7 border-b-4 border-r-4 border-white rounded-br-xl" />
+
+              {/* Ligne de scan animée */}
+              <div
+                className="absolute left-2 right-2 h-0.5 rounded-full"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, #4ADE80, transparent)',
+                  animation: 'scanLine 2s ease-in-out infinite',
+                }}
+              />
             </div>
           </>
         )}
       </div>
 
-      <div className="text-center py-4 px-6">
-        <p className="text-white/60 text-sm">Centrez le ticket dans le cadre</p>
+      {/* Instructions */}
+      <div className="text-center py-3 px-6 z-10">
+        <p className="text-white/80 text-sm font-medium">
+          Cadrez le ticket verticalement dans le cadre
+        </p>
+        <p className="text-white/50 text-xs mt-1">
+          Le magasin et le montant seront détectés automatiquement
+        </p>
       </div>
 
-      <div className="pb-12 px-6 flex items-center justify-center gap-10">
+      {/* Boutons */}
+      <div className="pb-12 px-6 flex items-center justify-center gap-10 z-10">
         <button
           onClick={() => fileRef.current?.click()}
           className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center"
@@ -374,7 +578,14 @@ export default function ScanPage() {
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFile}
+      />
     </div>
   );
 }
