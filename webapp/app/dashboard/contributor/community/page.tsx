@@ -98,12 +98,46 @@ function ChallengeCard({ ch, weekScans, weekMaxAmount, userId, weekNum, credited
     let cancelled = false;
     (async () => {
       try {
+        // Check DB first to prevent double-credit if localStorage was cleared
+        const { count } = await supabase
+          .from('point_transactions')
+          .select('id', { count: 'exact', head: true })
+          .eq('profile_id', userId)
+          .eq('type', 'earn_bonus')
+          .eq('description', `Défi semaine — ${ch.title}`)
+          .gte('created_at', new Date(new Date().setDate(new Date().getDate() - 7)).toISOString());
+
+        if ((count ?? 0) > 0) {
+          if (!cancelled) {
+            localStorage.setItem(bonusKey, '1');
+            onCredited(bonusKey);
+          }
+          return;
+        }
+
         await supabase.rpc('credit_points', {
           p_profile_id: userId,
           p_amount: ch.bonus,
           p_type: 'earn_bonus',
           p_description: `Défi semaine — ${ch.title}`,
         });
+
+        // Recalcule baskets_funded avec les nouveaux points totaux
+        const { data: fresh } = await supabase
+          .from('contributor_profiles')
+          .select('points_total, baskets_funded')
+          .eq('profile_id', userId)
+          .single();
+        if (fresh) {
+          const newBaskets = Math.floor((fresh.points_total ?? 0) / 500);
+          if (newBaskets > (fresh.baskets_funded ?? 0)) {
+            await supabase
+              .from('contributor_profiles')
+              .update({ baskets_funded: newBaskets })
+              .eq('profile_id', userId);
+          }
+        }
+
         if (!cancelled) {
           localStorage.setItem(bonusKey, '1');
           onCredited(bonusKey);

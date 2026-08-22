@@ -54,6 +54,7 @@ function SubscriptionsContent() {
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<PlanId | null>(null);
   const [success, setSuccess] = useState<PlanId | null>(null);
+  const [paymentError, setPaymentError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -98,7 +99,7 @@ function SubscriptionsContent() {
     setUpgrading(null);
 
     if (error || !data?.url) {
-      alert('Impossible de lancer le paiement. Réessayez.');
+      setPaymentError('Impossible de lancer le paiement. Réessayez dans quelques instants.');
       return;
     }
 
@@ -134,6 +135,18 @@ function SubscriptionsContent() {
             <p className="font-nunito font-bold text-[#2D5016]">
               ✓ Forfait {PLANS.find((p) => p.id === success)?.name} activé !
             </p>
+          </div>
+        )}
+
+        {paymentError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+            <p className="text-sm text-red-600">{paymentError}</p>
+            <button
+              onClick={() => setPaymentError('')}
+              className="text-xs text-red-400 underline mt-1"
+            >
+              Fermer
+            </button>
           </div>
         )}
 

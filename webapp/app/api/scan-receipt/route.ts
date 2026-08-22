@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
         const client = new Anthropic({ apiKey: anthropicKey });
 
         const response = await client.messages.create({
-          model: 'claude-haiku-4-5',
-          max_tokens: 256,
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 512,
           messages: [
             {
               role: 'user',
@@ -107,13 +107,15 @@ export async function POST(req: NextRequest) {
                 },
                 {
                   type: 'text',
-                  text: `Analyse ce ticket de caisse. Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :
+                  text: `Analyse ce ticket de caisse français. Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :
 {
-  "store": "nom exact du magasin ou null",
+  "store": "nom de l'enseigne ou null",
   "total": nombre_decimal_ou_null,
   "date": "YYYY-MM-DD ou null"
 }
-Pour total : extrais le montant final TTC (TOTAL, À PAYER, NET À PAYER). Pour store : le nom du magasin en haut du ticket.`,
+Pour store : cherche le nom de l'enseigne (ex: E.Leclerc, Leclerc, Lidl, Carrefour, Auchan, Intermarché, Monoprix, Super U…). Il apparaît souvent en haut du ticket ou sur le logo. Si tu vois "Leclerc" ou "E.Leclerc" ou "Centres E.Leclerc", retourne "E.Leclerc".
+Pour total : montant final TTC (cherche TOTAL, TOTAL TTC, À PAYER, NET À PAYER, MONTANT TTC). Valeur numérique décimale seulement.
+Pour date : date d'achat au format YYYY-MM-DD.`,
                 },
               ],
             },

@@ -45,6 +45,8 @@ export interface PickupPoint {
   id: string;
   name: string;
   address: string;
+  city?: string;
+  postal_code?: string;
   lat?: number;
   lng?: number;
   opening_hours?: Record<string, string>;
