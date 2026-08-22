@@ -145,9 +145,14 @@ export default function ContributorDashboard() {
   const firstName = profile?.full_name?.split(' ')[0] ?? '';
   const initials = (profile?.full_name ?? '?').split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?';
 
-  const basketReady = pointsAvail >= BASKET_COST;
-  const progressToBasket = basketReady ? 1 : pointsAvail / BASKET_COST;
-  const toNext = basketReady ? 0 : BASKET_COST - pointsAvail;
+  const basketsFundedCalc = Math.floor(pointsTotal / BASKET_COST);
+  const effectiveBasketsFunded = Math.max(basketsFunded, basketsFundedCalc);
+  const ptsInCycle = pointsTotal % BASKET_COST;
+  const progressToBasket = effectiveBasketsFunded === 0
+    ? pointsTotal / BASKET_COST
+    : ptsInCycle / BASKET_COST;
+  const toNext = BASKET_COST - (effectiveBasketsFunded === 0 ? pointsTotal : ptsInCycle);
+  const basketJustFunded = basketsFundedCalc > basketsFunded;
 
   const ptsDisplay = pointsAvail >= 1000
     ? `${(pointsAvail / 1000).toFixed(1)}k`
@@ -205,20 +210,25 @@ export default function ContributorDashboard() {
                 </span>
               </div>
 
-              {basketReady ? (
+              {basketJustFunded || effectiveBasketsFunded > 0 ? (
                 <div className="bg-[#EEF4E8] rounded-xl px-3 py-2">
-                  <p className="text-[#2D5016] font-nunito font-black text-sm">🎉 Panier disponible !</p>
+                  <p className="text-[#2D5016] font-nunito font-black text-sm">
+                    🎉 Panier #{effectiveBasketsFunded} financé !
+                  </p>
+                  <p className="text-xs text-green-700 mt-0.5">
+                    En cours d'attribution à une famille — encore {toNext} pts pour le #{effectiveBasketsFunded + 1}
+                  </p>
                 </div>
               ) : (
                 <>
                   <p className="text-xs text-gray-400 mb-1.5">
-                    Encore {toNext} pts pour un panier
+                    Encore {toNext} pts pour financer un panier
                   </p>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
-                        width: `${progressToBasket * 100}%`,
+                        width: `${Math.min(progressToBasket, 1) * 100}%`,
                         background: 'linear-gradient(90deg, #2D5016, #4A8025)',
                       }}
                     />

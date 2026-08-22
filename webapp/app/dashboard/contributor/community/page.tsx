@@ -121,6 +121,23 @@ function ChallengeCard({ ch, weekScans, weekMaxAmount, userId, weekNum, credited
           p_type: 'earn_bonus',
           p_description: `Défi semaine — ${ch.title}`,
         });
+
+        // Recalcule baskets_funded avec les nouveaux points totaux
+        const { data: fresh } = await supabase
+          .from('contributor_profiles')
+          .select('points_total, baskets_funded')
+          .eq('profile_id', userId)
+          .single();
+        if (fresh) {
+          const newBaskets = Math.floor((fresh.points_total ?? 0) / 500);
+          if (newBaskets > (fresh.baskets_funded ?? 0)) {
+            await supabase
+              .from('contributor_profiles')
+              .update({ baskets_funded: newBaskets })
+              .eq('profile_id', userId);
+          }
+        }
+
         if (!cancelled) {
           localStorage.setItem(bonusKey, '1');
           onCredited(bonusKey);
