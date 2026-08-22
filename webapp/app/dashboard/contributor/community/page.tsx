@@ -383,6 +383,97 @@ export default function CommunityPage() {
           )}
         </div>
 
+        {/* Bons partenaires */}
+        <div>
+          <div className="flex items-center justify-between px-1 mb-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Bons partenaires</p>
+            {contributor?.subscription_tier === 'free' && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                Abonnés uniquement
+              </span>
+            )}
+          </div>
+
+          {contributor?.subscription_tier === 'free' ? (
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center">
+              <div className="text-4xl mb-3">🔒</div>
+              <p className="font-nunito font-black text-gray-900 mb-1">Réservé aux abonnés</p>
+              <p className="text-sm text-gray-400 mb-4">
+                Débloquez des bons de réduction chez nos partenaires en passant à Essentiel ou Engagement.
+              </p>
+              <button
+                onClick={() => router.push('/dashboard/contributor/subscriptions')}
+                className="font-nunito font-black px-6 py-3 rounded-xl text-white text-sm"
+                style={{ background: 'linear-gradient(135deg, #2D5016, #4A8025)' }}
+              >
+                Voir les forfaits
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {(() => {
+                const tier = contributor?.subscription_tier ?? 'essentiel';
+                const scanned = contributor?.tickets_scanned ?? 0;
+                const paliers = tier === 'engagement'
+                  ? [
+                      { tickets: 20,  label: 'Bon partenaire — Palier 1' },
+                      { tickets: 50,  label: 'Bon partenaire — Palier 2' },
+                      { tickets: 100, label: 'Bon partenaire — Palier 3' },
+                    ]
+                  : [
+                      { tickets: 30,  label: 'Bon partenaire — Palier 1' },
+                      { tickets: 75,  label: 'Bon partenaire — Palier 2' },
+                      { tickets: 150, label: 'Bon partenaire — Palier 3' },
+                    ];
+
+                return paliers.map((p) => {
+                  const progress = Math.min(scanned / p.tickets, 1);
+                  const done = progress >= 1;
+                  return (
+                    <div key={p.tickets} className="bg-white rounded-2xl p-5 border border-gray-100">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">{done ? '🎁' : '🔓'}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-nunito font-black text-sm text-gray-900">{p.label}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {done ? 'Bientôt disponible — partenaires en cours' : `${Math.min(scanned, p.tickets)} / ${p.tickets} tickets`}
+                          </p>
+                        </div>
+                        <span
+                          className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+                          style={done
+                            ? { background: '#EEF4E8', color: '#2D5016' }
+                            : { background: '#F3F4F6', color: '#6B7280' }}
+                        >
+                          {done ? '✓ Débloqué' : `${p.tickets} tickets`}
+                        </span>
+                      </div>
+                      {!done && (
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${progress * 100}%`,
+                              background: 'linear-gradient(90deg, #2D5016, #4A8025)',
+                            }}
+                          />
+                        </div>
+                      )}
+                      {done && (
+                        <div className="bg-[#EEF4E8] rounded-xl px-3 py-2 text-center">
+                          <p className="text-xs text-[#2D5016] font-semibold">
+                            🕐 Partenariats en cours de signature — bientôt disponible !
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
+        </div>
+
         {/* Community impact */}
         <div
           className="rounded-2xl p-5"

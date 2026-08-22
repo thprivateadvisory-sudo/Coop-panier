@@ -297,6 +297,36 @@ export default function ContributorDashboard() {
           )}
         </div>
 
+        {/* Mes paniers */}
+        {basketsFunded > 0 && (
+          <div className="bg-white rounded-2xl p-5 border border-gray-100">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+              Mes paniers financés
+            </p>
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: Math.min(basketsFunded, 3) }, (_, i) => {
+                const num = basketsFunded - i;
+                return (
+                  <div key={num} className="flex items-center gap-3 bg-[#EEF4E8] rounded-xl px-4 py-3">
+                    <span className="text-xl">🧺</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-nunito font-black text-sm text-[#2D5016]">
+                        Panier #{num} — au nom de {firstName || 'vous'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">Distribué à une famille dans le besoin</p>
+                    </div>
+                  </div>
+                );
+              })}
+              {basketsFunded > 3 && (
+                <p className="text-xs text-center text-gray-400 pt-1">
+                  + {basketsFunded - 3} autres paniers financés
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Referral card */}
         {contributor?.referral_code && (
           <div className="bg-white rounded-2xl p-5 border border-gray-100">
