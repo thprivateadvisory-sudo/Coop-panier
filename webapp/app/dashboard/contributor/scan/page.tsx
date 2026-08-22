@@ -228,15 +228,30 @@ export default function ScanPage() {
     setSubmitError('');
     setStep('submitting');
 
-    // Vérifier si ce ticket a déjà été scanné
+    // Vérifier si ce ticket a déjà été scanné (par hash image OU par métadonnées OCR)
     if (imageHash) {
-      const { data: duplicate } = await supabase
+      const { data: dupHash } = await supabase
         .from('receipts')
         .select('id')
         .eq('contributor_id', userId)
         .eq('image_hash', imageHash)
         .limit(1);
-      if (duplicate && duplicate.length > 0) {
+      if (dupHash && dupHash.length > 0) {
+        setSubmitError('Ce ticket a déjà été scanné.');
+        setStep('confirm');
+        return;
+      }
+    }
+    if (ocrResult?.storeName && ocrResult?.purchaseDate) {
+      const { data: dupMeta } = await supabase
+        .from('receipts')
+        .select('id')
+        .eq('contributor_id', userId)
+        .eq('store_name', ocrResult.storeName)
+        .eq('purchase_date', ocrResult.purchaseDate)
+        .eq('total_amount', euros)
+        .limit(1);
+      if (dupMeta && dupMeta.length > 0) {
         setSubmitError('Ce ticket a déjà été scanné.');
         setStep('confirm');
         return;
