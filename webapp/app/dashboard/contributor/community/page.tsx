@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { ContributorProfile } from '@/lib/types';
@@ -114,7 +114,8 @@ function ChallengeCard({ ch, weekScans, weekMaxAmount, userId, weekNum, credited
       }
     })();
     return () => { cancelled = true; };
-  }, [done, userId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done, userId, bonusKey, credited]);
 
   return (
     <div
@@ -173,6 +174,7 @@ interface LeaderboardEntry {
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState('');
+  const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [weekScans, setWeekScans] = useState(0);
   const [weekMaxAmount, setWeekMaxAmount] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -208,6 +210,7 @@ export default function CommunityPage() {
       { data: allScans },
       { data: topCps },
       { data: statsData },
+      { data: contrib },
     ] = await Promise.all([
       supabase.from('point_transactions')
         .select('id')
@@ -228,7 +231,10 @@ export default function CommunityPage() {
         .order('points_total', { ascending: false })
         .limit(10),
       supabase.from('impact_stats').select('baskets_distributed').single(),
+      supabase.from('contributor_profiles').select('*').eq('profile_id', user.id).single(),
     ]);
+
+    setContributor(contrib);
 
     setWeekScans((weekTxs ?? []).length);
     setWeekMaxAmount(
@@ -271,9 +277,9 @@ export default function CommunityPage() {
   const myRank = leaderboard.findIndex((e) => e.profile_id === userId) + 1;
   const MEDALS = ['🥇', '🥈', '🥉'];
 
-  function addCreditedKey(key: string) {
+  const addCreditedKey = useCallback((key: string) => {
     setCreditedKeys((prev) => new Set(prev).add(key));
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8F7F4] pb-24">
