@@ -208,6 +208,25 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Quick links */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          {[
+            { label: 'Historique des points', href: '/dashboard/contributor/history',       emoji: '📋' },
+            { label: 'Gérer mon forfait',      href: '/dashboard/contributor/subscriptions', emoji: '⚡' },
+            { label: 'Communauté & défis',     href: '/dashboard/contributor/community',     emoji: '🌍' },
+          ].map((link, i, arr) => (
+            <button
+              key={link.href}
+              onClick={() => router.push(link.href)}
+              className={`flex items-center gap-4 px-5 py-4 w-full text-left hover:bg-gray-50 active:bg-gray-100 transition-colors ${i < arr.length - 1 ? 'border-b border-gray-100' : ''}`}
+            >
+              <span className="text-xl">{link.emoji}</span>
+              <span className="flex-1 text-sm font-medium text-gray-800">{link.label}</span>
+              <span className="text-gray-300 text-xl">›</span>
+            </button>
+          ))}
+        </div>
+
         {/* Sign out */}
         <button
           onClick={handleSignOut}

@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 const TABS = [
   { icon: '🏠', label: 'Accueil',    href: '/dashboard/contributor' },
   { icon: '📸', label: 'Scanner',    href: '/dashboard/contributor/scan' },
+  { icon: '🌍', label: 'Communauté', href: '/dashboard/contributor/community' },
   { icon: '📋', label: 'Historique', href: '/dashboard/contributor/history' },
-  { icon: '⚡', label: 'Forfaits',   href: '/dashboard/contributor/subscriptions' },
   { icon: '👤', label: 'Profil',     href: '/dashboard/contributor/profile' },
 ] as const;
 
