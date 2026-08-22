@@ -53,12 +53,45 @@ function ProgressRing({ progress, size = 100 }: { progress: number; size?: numbe
   );
 }
 
+function getISOWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+function calculateStreak(scanDates: string[]): number {
+  if (!scanDates.length) return 0;
+  const weekKeys = new Set(
+    scanDates.map((iso) => {
+      const d = new Date(iso);
+      return `${d.getFullYear()}-${getISOWeek(d)}`;
+    })
+  );
+  const now = new Date();
+  const currentKey = `${now.getFullYear()}-${getISOWeek(now)}`;
+  const offset = weekKeys.has(currentKey) ? 0 : 1;
+  let count = 0;
+  for (let i = offset; i <= 52; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i * 7);
+    if (weekKeys.has(`${d.getFullYear()}-${getISOWeek(d)}`)) {
+      count++;
+    } else {
+      break;
+    }
+  }
+  return count;
+}
+
 export default function ContributorDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -67,13 +100,18 @@ export default function ContributorDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/auth/login'); return; }
 
-      const [{ data: prof }, { data: contrib }] = await Promise.all([
+      const [{ data: prof }, { data: contrib }, { data: scanTxs }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase.from('contributor_profiles').select('*').eq('profile_id', user.id).single(),
+        supabase.from('point_transactions')
+          .select('created_at')
+          .eq('profile_id', user.id)
+          .eq('type', 'earn_scan'),
       ]);
 
       setProfile(prof);
       setContributor(contrib);
+      setStreak(calculateStreak((scanTxs ?? []).map((t) => t.created_at)));
       setLoading(false);
 
       channel = supabase
@@ -190,6 +228,24 @@ export default function ContributorDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Streak */}
+        {streak > 0 && (
+          <button
+            onClick={() => router.push('/dashboard/contributor/community')}
+            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-95 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #E8832A, #F09840)' }}
+          >
+            <span className="text-3xl leading-none">🔥</span>
+            <div className="flex-1 text-left">
+              <p className="font-nunito font-black text-white text-base leading-none">
+                {streak} semaine{streak > 1 ? 's' : ''} de streak !
+              </p>
+              <p className="text-orange-100 text-xs mt-0.5">Voir mes défis de la semaine</p>
+            </div>
+            <span className="text-white/60 text-xl">›</span>
+          </button>
+        )}
 
         {/* Scan CTA */}
         <button
