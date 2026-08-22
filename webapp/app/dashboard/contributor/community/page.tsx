@@ -66,7 +66,6 @@ const POOL = [
 ] as const;
 
 type Challenge = typeof POOL[number];
-type ChallengeType = Challenge['type'];
 
 function getWeeklyChallenges(weekNum: number): [Challenge, Challenge] {
   const a = POOL[weekNum % POOL.length];
