@@ -45,8 +45,10 @@ export default function LoginPage() {
         });
         if (error) throw error;
 
-        if (data.user) {
+        if (data.session) {
           window.location.href = '/auth/setup';
+        } else if (data.user) {
+          setInfo('Un email de confirmation a été envoyé à ' + email + '. Cliquez sur le lien pour activer votre compte.');
         }
 
       } else {

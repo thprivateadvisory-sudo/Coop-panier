@@ -95,7 +95,7 @@ export default function Home() {
           <p className="text-green-200 text-xs font-semibold uppercase tracking-wide mb-4">Impact collectif</p>
           <div className="grid grid-cols-3 gap-4 text-center">
             {[
-              { value: '10 pts', label: 'par euro dépensé' },
+              { value: '1 pt', label: 'par euro dépensé' },
               { value: '500 pts', label: '= 1 panier financé' },
               { value: '20 €', label: 'de valeur par panier' },
             ].map((s) => (

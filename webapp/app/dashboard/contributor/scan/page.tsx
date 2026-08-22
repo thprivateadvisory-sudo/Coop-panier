@@ -205,7 +205,7 @@ export default function ScanPage() {
       const result: OcrResult = await resp.json();
       setOcrResult(result);
       if (result.detectedAmount !== null) {
-        setAmount(result.detectedAmount.toFixed(2).replace('.', ','));
+        setAmount(result.detectedAmount.toFixed(2));
       }
     } catch {
       // En cas d'erreur réseau, on passe à la saisie manuelle
@@ -534,12 +534,9 @@ export default function ScanPage() {
             <div className="flex items-center gap-3">
               <span className="text-2xl font-nunito font-black text-gray-300">€</span>
               <input
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="0.01"
-                min="0.01"
-                max="1000"
-                placeholder="0,00"
+                placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="flex-1 text-3xl font-nunito font-black text-[#2D5016] focus:outline-none bg-transparent"
