@@ -103,7 +103,10 @@ export default function ScanPage() {
   const [pointsEarned, setPointsEarned] = useState(0);
   const [contributor, setContributor] = useState<ContributorProfile | null>(null);
   const [userId, setUserId] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [newPointsAvailable, setNewPointsAvailable] = useState(0);
+  const [newBasketFunded, setNewBasketFunded] = useState(false);
+  const [newBasketNumber, setNewBasketNumber] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
 
@@ -122,12 +125,12 @@ export default function ScanPage() {
       return;
     }
     setUserId(user.id);
-    const { data } = await supabase
-      .from('contributor_profiles')
-      .select('*')
-      .eq('profile_id', user.id)
-      .single();
+    const [{ data }, { data: prof }] = await Promise.all([
+      supabase.from('contributor_profiles').select('*').eq('profile_id', user.id).single(),
+      supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+    ]);
     setContributor(data);
+    setFirstName(prof?.full_name?.split(' ')[0] ?? '');
   }
 
   async function startCamera() {
@@ -253,11 +256,18 @@ export default function ScanPage() {
 
     const newTotal = fresh?.points_total ?? 0;
     const newAvailable = fresh?.points_available ?? 0;
+    const oldBaskets = contributor?.baskets_funded ?? 0;
+    const newBaskets = Math.floor(newTotal / 500);
 
     await supabase
       .from('contributor_profiles')
-      .update({ baskets_funded: Math.floor(newTotal / 500) })
+      .update({ baskets_funded: newBaskets })
       .eq('profile_id', userId);
+
+    if (newBaskets > oldBaskets) {
+      setNewBasketFunded(true);
+      setNewBasketNumber(newBaskets);
+    }
 
     setPointsEarned(earned);
     setNewPointsAvailable(newAvailable);
@@ -326,6 +336,21 @@ export default function ScanPage() {
               </p>
             )}
           </div>
+
+          {newBasketFunded && (
+            <div
+              className="rounded-2xl p-4 mb-4 text-center"
+              style={{ background: 'linear-gradient(135deg, #2D5016, #4A8025)' }}
+            >
+              <p className="text-2xl mb-1">🧺</p>
+              <p className="font-nunito font-black text-white text-base leading-tight">
+                Panier #{newBasketNumber} financé au nom de {firstName || 'vous'} !
+              </p>
+              <p className="text-green-200 text-xs mt-1">
+                Une famille va recevoir ce panier grâce à vous.
+              </p>
+            </div>
+          )}
 
           <p className="text-xs text-gray-400 mb-6">
             Solde disponible :{' '}
