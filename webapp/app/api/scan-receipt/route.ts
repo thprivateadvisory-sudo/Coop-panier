@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Ordre = priorité (termes plus spécifiques d'abord)
 const STORE_CHAINS: [string, string[]][] = [
@@ -51,6 +52,18 @@ function detectStore(text: string): { chain: string | null; rawName: string | nu
 
 export async function POST(req: NextRequest) {
   try {
+    // Vérification JWT — seul l'utilisateur lui-même peut soumettre un ticket
+    const authHeader = req.headers.get('authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: { user: authUser } } = await authClient.auth.getUser(token);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+    }
+
     const { imageBase64, contributorId } = (await req.json()) as {
       imageBase64: string;
       contributorId: string;
@@ -58,6 +71,11 @@ export async function POST(req: NextRequest) {
 
     if (!imageBase64 || !contributorId) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
+    }
+
+    // Le contributorId doit correspondre au token JWT
+    if (authUser.id !== contributorId) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -130,7 +148,7 @@ Pour date : date d'achat au format YYYY-MM-DD.`,
           const parsed = JSON.parse(jsonMatch[0]);
           const ocrStore: string | null = parsed.store ?? null;
           const ocrTotal: number | null =
-            typeof parsed.total === 'number' && parsed.total > 0 && parsed.total < 2000
+            typeof parsed.total === 'number' && parsed.total > 0 && parsed.total < 1000
               ? parsed.total
               : null;
           const ocrDate: string | null = parsed.date ?? null;

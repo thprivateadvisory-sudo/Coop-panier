@@ -210,34 +210,43 @@ export default function ContributorDashboard() {
                 </span>
               </div>
 
-              {basketJustFunded || effectiveBasketsFunded > 0 ? (
-                <div className="bg-[#EEF4E8] rounded-xl px-3 py-2">
-                  <p className="text-[#2D5016] font-nunito font-black text-sm">
-                    🎉 Panier #{effectiveBasketsFunded} financé !
-                  </p>
-                  <p className="text-xs text-green-700 mt-0.5">
-                    En cours d'attribution à une famille — encore {toNext} pts pour le #{effectiveBasketsFunded + 1}
-                  </p>
+              <>
+                <p className="text-xs text-gray-400 mb-1.5">
+                  {effectiveBasketsFunded > 0
+                    ? `Encore ${toNext} pts pour le panier #${effectiveBasketsFunded + 1}`
+                    : `Encore ${toNext} pts pour financer un panier`}
+                </p>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${Math.min(progressToBasket, 1) * 100}%`,
+                      background: 'linear-gradient(90deg, #2D5016, #4A8025)',
+                    }}
+                  />
                 </div>
-              ) : (
-                <>
-                  <p className="text-xs text-gray-400 mb-1.5">
-                    Encore {toNext} pts pour financer un panier
-                  </p>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${Math.min(progressToBasket, 1) * 100}%`,
-                        background: 'linear-gradient(90deg, #2D5016, #4A8025)',
-                      }}
-                    />
-                  </div>
-                </>
-              )}
+              </>
             </div>
           </div>
         </div>
+
+        {/* Notification panier nouvellement financé */}
+        {basketJustFunded && (
+          <div
+            className="rounded-2xl p-4 flex items-center gap-3"
+            style={{ background: 'linear-gradient(135deg, #2D5016, #4A8025)' }}
+          >
+            <span className="text-3xl">🧺</span>
+            <div className="flex-1">
+              <p className="font-nunito font-black text-white text-sm leading-tight">
+                Panier #{effectiveBasketsFunded} financé !
+              </p>
+              <p className="text-green-200 text-xs mt-0.5">
+                Une famille va recevoir ce panier grâce à vous.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Streak */}
         {streak > 0 && (

@@ -110,28 +110,36 @@ export default function ScanPage() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [imageHash, setImageHash] = useState('');
+  const [userLoaded, setUserLoaded] = useState(false);
+  const [accessToken, setAccessToken] = useState('');
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     loadUser();
     startCamera();
-    return () => stopCamera();
+    return () => {
+      mountedRef.current = false;
+      stopCamera();
+    };
   }, []);
 
   async function loadUser() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       router.push('/auth/login');
       return;
     }
-    setUserId(user.id);
+    setUserId(session.user.id);
+    setAccessToken(session.access_token);
     const [{ data }, { data: prof }] = await Promise.all([
-      supabase.from('contributor_profiles').select('*').eq('profile_id', user.id).single(),
-      supabase.from('profiles').select('full_name').eq('id', user.id).single(),
+      supabase.from('contributor_profiles').select('*').eq('profile_id', session.user.id).single(),
+      supabase.from('profiles').select('full_name').eq('id', session.user.id).single(),
     ]);
+    if (!mountedRef.current) return;
     setContributor(data);
     setFirstName(prof?.full_name?.split(' ')[0] ?? '');
+    setUserLoaded(true);
   }
 
   async function startCamera() {
@@ -199,7 +207,10 @@ export default function ScanPage() {
     try {
       const resp = await fetch('/api/scan-receipt', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ imageBase64: dataUrl, contributorId: userId }),
       });
       const result: OcrResult = await resp.json();
@@ -322,7 +333,7 @@ export default function ScanPage() {
     setPointsEarned(earned);
     setNewPointsAvailable(newAvailable);
     await new Promise((r) => setTimeout(r, 800));
-    setStep('success');
+    if (mountedRef.current) setStep('success');
   }
 
   // ── PROCESSING ──────────────────────────────────────────────
@@ -425,6 +436,7 @@ export default function ScanPage() {
                 setAmountError('');
                 setSubmitError('');
                 setImageHash('');
+                setCameraError('');
                 setStep('camera');
                 startCamera();
               }}
@@ -468,6 +480,7 @@ export default function ScanPage() {
               setAmountError('');
               setSubmitError('');
               setImageHash('');
+              setCameraError('');
               startCamera();
             }}
             className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl"
@@ -644,7 +657,7 @@ export default function ScanPage() {
 
         <button
           onClick={cameraError ? () => fileRef.current?.click() : capture}
-          disabled={!cameraReady && !cameraError}
+          disabled={(!cameraReady && !cameraError) || !userLoaded}
           className="w-20 h-20 rounded-full bg-white border-4 border-white/40 flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
           aria-label="Prendre une photo"
         >

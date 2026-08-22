@@ -105,7 +105,7 @@ function ChallengeCard({ ch, weekScans, weekMaxAmount, userId, weekNum, credited
           .eq('profile_id', userId)
           .eq('type', 'earn_bonus')
           .eq('description', `Défi semaine — ${ch.title}`)
-          .gte('created_at', new Date(new Date().setDate(new Date().getDate() - 7)).toISOString());
+          .gte('created_at', getWeekStart(new Date()).toISOString());
 
         if ((count ?? 0) > 0) {
           if (!cancelled) {
