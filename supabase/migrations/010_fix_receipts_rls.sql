@@ -1,5 +1,8 @@
 -- Recrée les politiques RLS sur la table receipts pour s'assurer qu'elles existent
--- et sont correctes. La politique INSERT était absente en production.
+-- et sont correctes. Le GRANT de base sur le rôle authenticated était manquant,
+-- ce qui bloquait toute insertion avant même l'évaluation des politiques RLS.
+
+GRANT SELECT, INSERT, UPDATE ON TABLE receipts TO authenticated;
 
 ALTER TABLE receipts ENABLE ROW LEVEL SECURITY;
 
