@@ -373,6 +373,7 @@ export default function ScanPage() {
                 setOcrResult(null);
                 setAmount('');
                 setAmountError('');
+                setSubmitError('');
                 setStep('camera');
                 startCamera();
               }}
@@ -413,6 +414,8 @@ export default function ScanPage() {
               setStep('camera');
               setOcrResult(null);
               setAmount('');
+              setAmountError('');
+              setSubmitError('');
               startCamera();
             }}
             className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl"
