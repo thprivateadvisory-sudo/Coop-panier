@@ -109,6 +109,7 @@ export default function ScanPage() {
   const [newBasketNumber, setNewBasketNumber] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [imageHash, setImageHash] = useState('');
 
   useEffect(() => {
     loadUser();
@@ -184,8 +185,17 @@ export default function ScanPage() {
     reader.readAsDataURL(file);
   }
 
+  async function hashImage(dataUrl: string): Promise<string> {
+    const base64 = dataUrl.split(',')[1] ?? dataUrl;
+    const bytes = Uint8Array.from(atob(base64.slice(0, 8192)), (c) => c.charCodeAt(0));
+    const hashBuf = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
   async function analyzeImage(dataUrl: string) {
     setStep('recognizing');
+    const hash = await hashImage(dataUrl);
+    setImageHash(hash);
     try {
       const resp = await fetch('/api/scan-receipt', {
         method: 'POST',
@@ -218,11 +228,41 @@ export default function ScanPage() {
     setSubmitError('');
     setStep('submitting');
 
+    // Vérifier si ce ticket a déjà été scanné (par hash image OU par métadonnées OCR)
+    if (imageHash) {
+      const { data: dupHash } = await supabase
+        .from('receipts')
+        .select('id')
+        .eq('contributor_id', userId)
+        .eq('image_hash', imageHash)
+        .limit(1);
+      if (dupHash && dupHash.length > 0) {
+        setSubmitError('Ce ticket a déjà été scanné.');
+        setStep('confirm');
+        return;
+      }
+    }
+    if (ocrResult?.storeName && ocrResult?.purchaseDate) {
+      const { data: dupMeta } = await supabase
+        .from('receipts')
+        .select('id')
+        .eq('contributor_id', userId)
+        .eq('store_name', ocrResult.storeName)
+        .eq('purchase_date', ocrResult.purchaseDate)
+        .eq('total_amount', euros)
+        .limit(1);
+      if (dupMeta && dupMeta.length > 0) {
+        setSubmitError('Ce ticket a déjà été scanné.');
+        setStep('confirm');
+        return;
+      }
+    }
+
     const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
     const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
 
-    // Stocker le ticket dans receipts (data business)
-    await supabase.from('receipts').insert({
+    // Stocker le ticket — l'index unique sur image_hash bloque automatiquement les doublons
+    const { error: insertErr } = await supabase.from('receipts').insert({
       contributor_id: userId,
       image_url: ocrResult?.imageUrl || 'manual',
       store_name: ocrResult?.storeName ?? null,
@@ -231,7 +271,19 @@ export default function ScanPage() {
       points_earned: earned,
       status: 'validated',
       ocr_confidence: ocrResult?.confidence ?? null,
+      image_hash: imageHash || null,
     });
+
+    if (insertErr) {
+      // Code 23505 = violation de contrainte unique (doublon)
+      if (insertErr.code === '23505') {
+        setSubmitError('Ce ticket a déjà été scanné.');
+      } else {
+        setSubmitError(insertErr.message ?? 'Erreur lors de l\'enregistrement.');
+      }
+      setStep('confirm');
+      return;
+    }
 
     // Créditer les points
     const { error: rpcErr } = await supabase.rpc('credit_points', {
@@ -373,6 +425,8 @@ export default function ScanPage() {
                 setOcrResult(null);
                 setAmount('');
                 setAmountError('');
+                setSubmitError('');
+                setImageHash('');
                 setStep('camera');
                 startCamera();
               }}
@@ -413,6 +467,9 @@ export default function ScanPage() {
               setStep('camera');
               setOcrResult(null);
               setAmount('');
+              setAmountError('');
+              setSubmitError('');
+              setImageHash('');
               startCamera();
             }}
             className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl"

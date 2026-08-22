@@ -8,7 +8,7 @@ import { BottomNav } from '../_components/BottomNav';
 
 type Transaction = {
   id: string;
-  amount: number;
+  points_earned: number;
   type: string;
   description: string;
   created_at: string;
@@ -43,7 +43,7 @@ export default function HistoryPage() {
 
     const { data } = await supabase
       .from('point_transactions')
-      .select('id, amount, type, description, created_at')
+      .select('id, points_earned, type, description, created_at')
       .eq('profile_id', user.id)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -60,10 +60,10 @@ export default function HistoryPage() {
     );
   }
 
-  const earnTxs = transactions.filter((t) => t.amount > 0);
-  const totalPoints = earnTxs.reduce((s, t) => s + t.amount, 0);
+  const earnTxs = transactions.filter((t) => t.points_earned > 0);
+  const totalPoints = earnTxs.reduce((s, t) => s + t.points_earned, 0);
   const totalScans = transactions.filter((t) => t.type === 'earn_scan').length;
-  const totalSpent = transactions.filter((t) => t.type === 'spend_basket').reduce((s, t) => s + Math.abs(t.amount), 0);
+  const totalSpent = transactions.filter((t) => t.type === 'spend_basket').reduce((s, t) => s + Math.abs(t.points_earned), 0);
 
   return (
     <div className="min-h-screen bg-[#F8F7F4] pb-24">
@@ -113,7 +113,7 @@ export default function HistoryPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {transactions.map((tx) => {
-              const isEarn = tx.amount > 0;
+              const isEarn = tx.points_earned > 0;
               return (
                 <div
                   key={tx.id}
@@ -139,7 +139,7 @@ export default function HistoryPage() {
                       className="font-nunito font-black text-base"
                       style={{ color: isEarn ? '#2D5016' : '#E8832A' }}
                     >
-                      {isEarn ? '+' : ''}{tx.amount.toLocaleString('fr-FR')} pts
+                      {isEarn ? '+' : ''}{tx.points_earned.toLocaleString('fr-FR')} pts
                     </p>
                   </div>
                 </div>
