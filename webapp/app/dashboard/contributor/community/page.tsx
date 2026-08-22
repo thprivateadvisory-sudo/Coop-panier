@@ -187,6 +187,10 @@ export default function CommunityPage() {
 
   useEffect(() => { loadAll(); }, []);
 
+  const addCreditedKey = useCallback((key: string) => {
+    setCreditedKeys((prev) => new Set(prev).add(key));
+  }, []);
+
   async function loadAll() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push('/auth/login'); return; }
@@ -275,10 +279,6 @@ export default function CommunityPage() {
 
   const myRank = leaderboard.findIndex((e) => e.profile_id === userId) + 1;
   const MEDALS = ['🥇', '🥈', '🥉'];
-
-  const addCreditedKey = useCallback((key: string) => {
-    setCreditedKeys((prev) => new Set(prev).add(key));
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8F7F4] pb-24">
