@@ -187,8 +187,8 @@ export default function ScanPage() {
 
   async function hashImage(dataUrl: string): Promise<string> {
     const base64 = dataUrl.split(',')[1] ?? dataUrl;
-    const bytes = Uint8Array.from(atob(base64.slice(0, 8192)), (c) => c.charCodeAt(0));
-    const hashBuf = await crypto.subtle.digest('SHA-256', bytes);
+    const buf = new TextEncoder().encode(base64);
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
     return Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
@@ -228,16 +228,15 @@ export default function ScanPage() {
     setSubmitError('');
     setStep('submitting');
 
-    // Vérifier si ce ticket a déjà été scanné (par hash image OU par métadonnées OCR)
+    // Vérifier si ce ticket a déjà été scanné — vérification globale (tous utilisateurs)
     if (imageHash) {
       const { data: dupHash } = await supabase
         .from('receipts')
         .select('id')
-        .eq('contributor_id', userId)
         .eq('image_hash', imageHash)
         .limit(1);
       if (dupHash && dupHash.length > 0) {
-        setSubmitError('Ce ticket a déjà été scanné.');
+        setSubmitError('Ce ticket a déjà été utilisé.');
         setStep('confirm');
         return;
       }
@@ -246,13 +245,12 @@ export default function ScanPage() {
       const { data: dupMeta } = await supabase
         .from('receipts')
         .select('id')
-        .eq('contributor_id', userId)
         .eq('store_name', ocrResult.storeName)
         .eq('purchase_date', ocrResult.purchaseDate)
         .eq('total_amount', euros)
         .limit(1);
       if (dupMeta && dupMeta.length > 0) {
-        setSubmitError('Ce ticket a déjà été scanné.');
+        setSubmitError('Ce ticket a déjà été utilisé.');
         setStep('confirm');
         return;
       }
@@ -277,7 +275,7 @@ export default function ScanPage() {
     if (insertErr) {
       // Code 23505 = violation de contrainte unique (doublon)
       if (insertErr.code === '23505') {
-        setSubmitError('Ce ticket a déjà été scanné.');
+        setSubmitError('Ce ticket a déjà été utilisé.');
       } else {
         setSubmitError(insertErr.message ?? 'Erreur lors de l\'enregistrement.');
       }
