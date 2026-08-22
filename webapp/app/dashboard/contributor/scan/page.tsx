@@ -261,8 +261,8 @@ export default function ScanPage() {
     const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
     const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
 
-    // Stocker le ticket dans receipts (data business)
-    await supabase.from('receipts').insert({
+    // Stocker le ticket — l'index unique sur image_hash bloque automatiquement les doublons
+    const { error: insertErr } = await supabase.from('receipts').insert({
       contributor_id: userId,
       image_url: ocrResult?.imageUrl || 'manual',
       store_name: ocrResult?.storeName ?? null,
@@ -273,6 +273,17 @@ export default function ScanPage() {
       ocr_confidence: ocrResult?.confidence ?? null,
       image_hash: imageHash || null,
     });
+
+    if (insertErr) {
+      // Code 23505 = violation de contrainte unique (doublon)
+      if (insertErr.code === '23505') {
+        setSubmitError('Ce ticket a déjà été scanné.');
+      } else {
+        setSubmitError(insertErr.message ?? 'Erreur lors de l\'enregistrement.');
+      }
+      setStep('confirm');
+      return;
+    }
 
     // Créditer les points
     const { error: rpcErr } = await supabase.rpc('credit_points', {
