@@ -1,5 +1,5 @@
-const CACHE_STATIC = 'cooppanier-static-v2';
-const CACHE_PAGES = 'cooppanier-pages-v2';
+const CACHE_STATIC = 'cooppanier-static-v3';
+const CACHE_PAGES = 'cooppanier-pages-v3';
 
 const PRECACHE_STATIC = [
   '/logo.png',
