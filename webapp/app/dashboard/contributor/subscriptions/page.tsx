@@ -82,8 +82,16 @@ function SubscriptionsContent() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Downgrade vers free : pas de paiement, mise à jour directe
+    // Downgrade vers free : mise à jour directe
     if (planId === 'free') {
+      const confirmed = window.confirm(
+        'En passant au forfait Gratuit, votre accès aux avantages premium sera retiré.\n\n' +
+        'Important : si vous avez un abonnement Stripe actif, il ne sera pas résilié automatiquement. ' +
+        'Vous devrez contacter le support pour éviter tout prélèvement futur.\n\n' +
+        'Continuer ?'
+      );
+      if (!confirmed) { setUpgrading(null); return; }
+
       await supabase.from('contributor_profiles').update({ subscription_tier: 'free' }).eq('profile_id', user.id);
       setContributor((prev) => prev ? { ...prev, subscription_tier: 'free' } : prev);
       setUpgrading(null);

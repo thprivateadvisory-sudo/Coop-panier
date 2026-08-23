@@ -53,7 +53,10 @@ export default function ProfilePage() {
   async function saveName() {
     if (!fullName.trim() || !profile) return;
     setSaving(true);
-    await supabase.from('profiles').update({ full_name: fullName.trim() }).eq('id', profile.id);
+    await Promise.all([
+      supabase.from('profiles').update({ full_name: fullName.trim() }).eq('id', profile.id),
+      supabase.auth.updateUser({ data: { full_name: fullName.trim() } }),
+    ]);
     setProfile((p) => p ? { ...p, full_name: fullName.trim() } : p);
     setSaving(false);
     setEditing(false);
