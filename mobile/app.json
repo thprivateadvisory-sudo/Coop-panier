@@ -31,9 +31,18 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-camera",
-      "expo-barcode-scanner",
-      "expo-image-picker",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Coop'Panier utilise l'appareil photo pour scanner vos tickets de caisse et les QR codes bénéficiaires."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Coop'Panier accède à vos photos pour importer un ticket de caisse."
+        }
+      ],
       "expo-notifications",
       "expo-secure-store",
       [

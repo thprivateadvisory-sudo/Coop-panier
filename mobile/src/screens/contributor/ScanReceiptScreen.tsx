@@ -44,7 +44,7 @@ export function ScanReceiptScreen({ navigation }: Props) {
 
   async function handleGalleryPick() {
     const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
     });
     if (!picked.canceled && picked.assets[0]) {

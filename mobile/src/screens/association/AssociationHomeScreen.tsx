@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
@@ -115,7 +116,7 @@ export function AssociationHomeScreen({ navigation }: Props) {
             <Text style={styles.greeting}>Bonjour 👋</Text>
             <Text style={styles.pickupName}>{pickupName || 'Votre point de retrait'}</Text>
           </View>
-          <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('AssociationSettings')}>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => Alert.alert('Paramètres', 'Disponible prochainement.')}>
             <Text style={styles.settingsIcon}>⚙️</Text>
           </TouchableOpacity>
         </View>
@@ -177,7 +178,7 @@ export function AssociationHomeScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={styles.menuRow}
-          onPress={() => navigation.navigate('DistributionHistory')}
+          onPress={() => Alert.alert('Historique', 'Disponible prochainement.')}
           activeOpacity={0.85}
         >
           <Text style={styles.menuEmoji}>📋</Text>

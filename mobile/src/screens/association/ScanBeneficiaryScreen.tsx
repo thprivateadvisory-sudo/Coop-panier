@@ -88,17 +88,15 @@ export function ScanBeneficiaryScreen({ navigation }: Props) {
     setState('processing');
 
     try {
-      // Trouver un panier assigné à ce bénéficiaire
-      const { data: basket } = await supabase
-        .from('baskets')
-        .select('id')
-        .eq('beneficiary_profile_id', beneficiary.profile_id)
-        .eq('status', 'assigned')
-        .limit(1)
-        .single();
+      // RPC atomique : verrou row-level, incrément DB-side, pas de race condition
+      const { data, error } = await supabase.rpc('distribute_basket', {
+        p_beneficiary_profile_id: beneficiary.profile_id,
+        p_distributor_profile_id: profile.id,
+      });
 
-      if (!basket) {
-        // Aucun panier assigné — on crée une distribution directe
+      if (error) throw error;
+
+      if (data?.error === 'NO_BASKET_ASSIGNED') {
         Alert.alert(
           'Aucun panier assigné',
           'Ce bénéficiaire n\'a pas de panier assigné actuellement. Contactez l\'administrateur.',
@@ -106,18 +104,6 @@ export function ScanBeneficiaryScreen({ navigation }: Props) {
         );
         return;
       }
-
-      // Marquer le panier comme distribué
-      await supabase
-        .from('baskets')
-        .update({ status: 'distributed', distributed_at: new Date().toISOString() })
-        .eq('id', basket.id);
-
-      // Incrémenter le compteur du bénéficiaire
-      await supabase
-        .from('beneficiary_profiles')
-        .update({ baskets_received: beneficiary.baskets_received + 1 })
-        .eq('profile_id', beneficiary.profile_id);
 
       Alert.alert(
         '✅ Distribution validée',
