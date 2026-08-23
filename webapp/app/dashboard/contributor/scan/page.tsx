@@ -464,139 +464,137 @@ export default function ScanPage() {
 
   // ── CONFIRM ──────────────────────────────────────────────────
   if (step === 'confirm') {
-    // Verrou si l'OCR est très confiant — empêche toute manipulation du montant
-    const amountLocked =
-      ocrResult?.detectedAmount !== null &&
-      ocrResult?.detectedAmount !== undefined &&
-      (ocrResult?.confidence ?? 0) >= 0.92;
+    const amountDetected = ocrResult?.detectedAmount !== null && ocrResult?.detectedAmount !== undefined;
+    const storeIcon = ocrResult?.storeChain ? STORE_ICONS[ocrResult.storeChain] ?? '🏪' : '🏪';
+    const previewPts = amountDetected
+      ? Math.round(
+          ocrResult!.detectedAmount! *
+            POINTS_PER_EURO *
+            TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free']
+        )
+      : null;
 
-    // Plafond selon le contexte :
-    // - verrouillé → seule la valeur détectée est acceptée
-    // - OCR a détecté quelque chose (confiance < 0.92) → tolérance +30%, max 200 €
-    // - saisie manuelle pure → 150 € max
-    const maxAmount = amountLocked
-      ? (ocrResult!.detectedAmount ?? 150)
-      : ocrResult?.detectedAmount
-      ? Math.min(ocrResult.detectedAmount * 1.3, 200)
-      : 150;
+    function retake() {
+      setStep('camera');
+      setOcrResult(null);
+      setAmount('');
+      setAmountError('');
+      setSubmitError('');
+      setImageHash('');
+      setCameraError('');
+      startCamera();
+    }
 
-    const parsedAmount = parseFloat(amount.replace(',', '.'));
-    const previewPts =
-      amount && !isNaN(parsedAmount) && parsedAmount > 0
-        ? Math.round(
-            parsedAmount *
-              POINTS_PER_EURO *
-              TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free']
-          )
-        : null;
+    // ── Montant non lisible → forcer la reprise de photo ──────
+    if (!amountDetected) {
+      return (
+        <div className="min-h-screen bg-[#F8F7F4] flex flex-col">
+          <div
+            className="text-white px-6 pt-12 pb-6 flex items-center gap-4"
+            style={{ background: 'linear-gradient(135deg, #2D5016, #3D6B1F)' }}
+          >
+            <button onClick={retake} className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl">‹</button>
+            <h1 className="font-nunito font-black text-lg">Ticket illisible</h1>
+          </div>
 
-    const storeIcon = ocrResult?.storeChain
-      ? STORE_ICONS[ocrResult.storeChain] ?? '🏪'
-      : '🏪';
-    const confidencePct = ocrResult ? Math.round(ocrResult.confidence * 100) : 0;
+          <div className="flex-1 px-5 pt-5 flex flex-col gap-4 max-w-lg mx-auto w-full pb-8">
+            {capturedImage && (
+              <div className="rounded-2xl overflow-hidden border border-gray-200 max-h-48 flex items-center justify-center bg-gray-50">
+                <img src={capturedImage} alt="Ticket" className="w-full object-contain max-h-48" />
+              </div>
+            )}
 
+            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-5 text-center">
+              <div className="text-4xl mb-3">🔍</div>
+              <p className="font-nunito font-black text-red-700 text-lg mb-2">Montant non détecté</p>
+              <p className="text-sm text-red-600 leading-relaxed">
+                L'OCR n'a pas pu lire le montant total sur ce ticket.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Conseils pour une meilleure photo</p>
+              <ul className="flex flex-col gap-2">
+                {[
+                  'Cadrez uniquement le ticket, pas la main',
+                  'Assurez-vous que le TOTAL TTC est visible',
+                  'Bonne lumière, ticket à plat et sans plis',
+                  'Évitez le flash direct qui crée des reflets',
+                ].map((tip) => (
+                  <li key={tip} className="flex items-start gap-2 text-sm text-gray-600">
+                    <span className="text-[#2D5016] mt-0.5">✓</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <button
+              onClick={retake}
+              className="w-full font-nunito font-black py-4 rounded-xl text-lg text-white"
+              style={{ background: 'linear-gradient(135deg, #E8832A, #F09840)' }}
+            >
+              Reprendre la photo
+            </button>
+            <button
+              onClick={() => router.push('/dashboard/contributor')}
+              className="w-full border-2 border-gray-200 text-gray-500 font-semibold py-3 rounded-xl text-sm"
+            >
+              Retour au tableau de bord
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Montant détecté → verrouillé, validation directe ─────
     return (
       <div className="min-h-screen bg-[#F8F7F4] flex flex-col">
         <div
           className="text-white px-6 pt-12 pb-6 flex items-center gap-4"
           style={{ background: 'linear-gradient(135deg, #2D5016, #3D6B1F)' }}
         >
-          <button
-            onClick={() => {
-              setStep('camera');
-              setOcrResult(null);
-              setAmount('');
-              setAmountError('');
-              setSubmitError('');
-              setImageHash('');
-              setCameraError('');
-              startCamera();
-            }}
-            className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl"
-          >
-            ‹
-          </button>
+          <button onClick={retake} className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white text-xl">‹</button>
           <h1 className="font-nunito font-black text-lg">Confirmer le ticket</h1>
         </div>
 
         <div className="flex-1 px-5 pt-5 flex flex-col gap-4 max-w-lg mx-auto w-full pb-8">
-          {/* Aperçu ticket */}
           {capturedImage && (
             <div className="rounded-2xl overflow-hidden border border-gray-200 max-h-40 flex items-center justify-center bg-gray-50">
-              <img
-                src={capturedImage}
-                alt="Ticket"
-                className="w-full object-contain max-h-40"
-              />
+              <img src={capturedImage} alt="Ticket" className="w-full object-contain max-h-40" />
             </div>
           )}
 
-          {/* Magasin détecté */}
-          {ocrResult && (
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 flex items-center gap-4">
-              <span className="text-3xl">{ocrResult.storeName ? storeIcon : '❓'}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                  Magasin reconnu
-                </p>
-                <p className="font-nunito font-black text-gray-900 truncate">
-                  {ocrResult.storeName ?? 'Non identifié'}
-                </p>
-              </div>
-              <span
-                className="text-xs font-bold px-2 py-1 rounded-full"
-                style={{
-                  background: confidencePct >= 80 ? '#EEF4E8' : '#FEF3E8',
-                  color: confidencePct >= 80 ? '#2D5016' : '#E8832A',
-                }}
-              >
-                {confidencePct}%
+          {/* Magasin */}
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 flex items-center gap-4">
+            <span className="text-3xl">{ocrResult?.storeName ? storeIcon : '❓'}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Magasin</p>
+              <p className="font-nunito font-black text-gray-900 truncate">
+                {ocrResult?.storeName ?? 'Non identifié'}
+              </p>
+            </div>
+          </div>
+
+          {/* Montant verrouillé */}
+          <div className="bg-white rounded-2xl p-6 border-2 border-[#2D5016]">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Montant total du ticket
+              </label>
+              <span className="text-xs font-semibold text-[#2D5016] bg-[#EEF4E8] px-2 py-0.5 rounded-full">
+                🔒 Vérifié automatiquement
               </span>
             </div>
-          )}
-
-          {!ocrResult?.ocrAvailable && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
-              Reconnaissance automatique non disponible — saisissez le montant manuellement.
-            </div>
-          )}
-
-          {/* Montant */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block">
-              Montant total du ticket (€)
-            </label>
-            {amountLocked ? (
-              <p className="text-xs text-[#2D5016] mb-3">
-                🔒 Montant vérifié automatiquement — non modifiable
-              </p>
-            ) : ocrResult?.detectedAmount !== null && ocrResult?.detectedAmount !== undefined ? (
-              <p className="text-xs text-[#E8832A] mb-3">
-                ⚠ Vérifiez que le montant correspond exactement à votre ticket
-              </p>
-            ) : (
-              <p className="text-xs text-gray-400 mb-3">
-                Saisissez le montant TOTAL TTC indiqué sur votre ticket (max {maxAmount} €)
-              </p>
-            )}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span className="text-2xl font-nunito font-black text-gray-300">€</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => {
-                  if (amountLocked) return;
-                  setAmount(e.target.value);
-                }}
-                readOnly={amountLocked}
-                className={`flex-1 text-3xl font-nunito font-black text-[#2D5016] focus:outline-none bg-transparent ${amountLocked ? 'cursor-default select-none' : ''}`}
-                autoFocus={!amountLocked && !ocrResult?.detectedAmount}
-              />
-              {amountLocked && <span className="text-gray-300 text-lg">🔒</span>}
+              <span className="text-4xl font-nunito font-black text-[#2D5016]">
+                {ocrResult!.detectedAmount!.toFixed(2)}
+              </span>
             </div>
-            {amountError && <p className="text-red-500 text-xs mt-2">{amountError}</p>}
+            <p className="text-xs text-gray-400 mt-2">
+              Ce montant a été lu directement sur votre ticket — il ne peut pas être modifié.
+            </p>
             {submitError && <p className="text-red-500 text-xs mt-2">Erreur : {submitError}</p>}
           </div>
 
@@ -611,11 +609,17 @@ export default function ScanPage() {
 
           <button
             onClick={submitScan}
-            disabled={!amount}
-            className="w-full font-nunito font-black py-4 rounded-xl text-lg text-white disabled:opacity-40"
+            className="w-full font-nunito font-black py-4 rounded-xl text-lg text-white"
             style={{ background: 'linear-gradient(135deg, #E8832A, #F09840)' }}
           >
             Valider le ticket
+          </button>
+
+          <button
+            onClick={retake}
+            className="w-full border-2 border-gray-200 text-gray-500 font-semibold py-3 rounded-xl text-sm"
+          >
+            Le montant est incorrect — reprendre la photo
           </button>
         </div>
       </div>
