@@ -55,7 +55,7 @@
     "extra": {
       "supabaseUrl": "https://gzykmayyxkyamymaknsq.supabase.co",
       "supabaseAnonKey": "sb_publishable_vgc-zYhRHJO6p6Kz8DvwDQ_06rsxr1n",
-      "stripePublishableKey": "STRIPE_PUBLISHABLE_KEY_PLACEHOLDER",
+      "stripePublishableKey": "pk_live_51TOybqRmrarRZT7ezNz8gy54YSqyGtY5gY4g6RvyBxl7JWYAbFNFMadiSR7C1pKUnVnwDMRn8LrX3Ds0JeNlE5g400ndJUulYO",
       "eas": {
         "projectId": "YOUR_EAS_PROJECT_ID"
       }
