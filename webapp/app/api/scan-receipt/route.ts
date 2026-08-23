@@ -109,8 +109,8 @@ export async function POST(req: NextRequest) {
         const client = new Anthropic({ apiKey: anthropicKey });
 
         const response = await client.messages.create({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 512,
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
           messages: [
             {
               role: 'user',
@@ -125,15 +125,15 @@ export async function POST(req: NextRequest) {
                 },
                 {
                   type: 'text',
-                  text: `Analyse ce ticket de caisse français. Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication :
-{
-  "store": "nom de l'enseigne ou null",
-  "total": nombre_decimal_ou_null,
-  "date": "YYYY-MM-DD ou null"
-}
-Pour store : cherche le nom de l'enseigne (ex: E.Leclerc, Leclerc, Lidl, Carrefour, Auchan, Intermarché, Monoprix, Super U…). Il apparaît souvent en haut du ticket ou sur le logo. Si tu vois "Leclerc" ou "E.Leclerc" ou "Centres E.Leclerc", retourne "E.Leclerc".
-Pour total : montant final TTC (cherche TOTAL, TOTAL TTC, À PAYER, NET À PAYER, MONTANT TTC). Valeur numérique décimale seulement.
-Pour date : date d'achat au format YYYY-MM-DD.`,
+                  text: `Tu es un expert en lecture de tickets de caisse français. Lis attentivement chaque ligne de ce ticket et réponds UNIQUEMENT en JSON valide, sans markdown, sans explication.
+
+Format attendu :
+{"store":"nom de l'enseigne ou null","total":montant_numerique_ou_null,"date":"YYYY-MM-DD ou null"}
+
+RÈGLES STRICTES :
+- store : nom de l'enseigne commerciale. Cherche en haut du ticket (logo, en-tête). Exemples : "E.Leclerc", "Lidl", "Carrefour", "Carrefour Market", "Auchan", "Intermarché", "Monoprix", "Super U", "Hyper U", "Casino", "Franprix", "Picard", "Biocoop". Si tu vois "Leclerc" ou "Centres E.Leclerc" → retourne "E.Leclerc". null seulement si vraiment illisible.
+- total : le MONTANT FINAL payé en euros. Cherche les mots-clés : TOTAL, TOTAL TTC, MONTANT TTC, À PAYER, NET À PAYER, VOUS AVEZ PAYÉ, ESPÈCES, CB, VISA, MASTERCARD (le montant juste après). C'est toujours le plus grand montant en bas du ticket. Ne prends PAS la TVA, PAS les sous-totaux. Retourne un nombre décimal (ex: 23.50). null si illisible.
+- date : date d'achat au format YYYY-MM-DD. Cherche DD/MM/YYYY ou DD-MM-YYYY ou DD.MM.YYYY sur le ticket. null si absent.`,
                 },
               ],
             },
