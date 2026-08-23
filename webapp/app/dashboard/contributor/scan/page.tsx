@@ -231,8 +231,20 @@ export default function ScanPage() {
       setAmountError('Entrez un montant valide (ex: 23,50)');
       return;
     }
-    if (euros > 1000) {
-      setAmountError('Montant trop élevé');
+
+    // Plafond anti-fraude : recalculé à l'identique de l'UI
+    const ocrLocked =
+      ocrResult?.detectedAmount !== null &&
+      ocrResult?.detectedAmount !== undefined &&
+      (ocrResult?.confidence ?? 0) >= 0.92;
+    const maxAllowed = ocrLocked
+      ? (ocrResult!.detectedAmount ?? 150)
+      : ocrResult?.detectedAmount
+      ? Math.min(ocrResult.detectedAmount * 1.3, 200)
+      : 150;
+
+    if (euros > maxAllowed) {
+      setAmountError(`Montant invalide — maximum autorisé : ${maxAllowed.toFixed(2)} €`);
       return;
     }
     setAmountError('');
@@ -452,10 +464,27 @@ export default function ScanPage() {
 
   // ── CONFIRM ──────────────────────────────────────────────────
   if (step === 'confirm') {
+    // Verrou si l'OCR est très confiant — empêche toute manipulation du montant
+    const amountLocked =
+      ocrResult?.detectedAmount !== null &&
+      ocrResult?.detectedAmount !== undefined &&
+      (ocrResult?.confidence ?? 0) >= 0.92;
+
+    // Plafond selon le contexte :
+    // - verrouillé → seule la valeur détectée est acceptée
+    // - OCR a détecté quelque chose (confiance < 0.92) → tolérance +30%, max 200 €
+    // - saisie manuelle pure → 150 € max
+    const maxAmount = amountLocked
+      ? (ocrResult!.detectedAmount ?? 150)
+      : ocrResult?.detectedAmount
+      ? Math.min(ocrResult.detectedAmount * 1.3, 200)
+      : 150;
+
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
     const previewPts =
-      amount && !isNaN(parseFloat(amount.replace(',', '.'))) && parseFloat(amount.replace(',', '.')) > 0
+      amount && !isNaN(parsedAmount) && parsedAmount > 0
         ? Math.round(
-            parseFloat(amount.replace(',', '.')) *
+            parsedAmount *
               POINTS_PER_EURO *
               TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free']
           )
@@ -537,9 +566,17 @@ export default function ScanPage() {
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 block">
               Montant total du ticket (€)
             </label>
-            {ocrResult?.detectedAmount !== null && ocrResult?.detectedAmount !== undefined && (
+            {amountLocked ? (
               <p className="text-xs text-[#2D5016] mb-3">
-                ✓ Montant détecté automatiquement — vérifiez et corrigez si besoin
+                🔒 Montant vérifié automatiquement — non modifiable
+              </p>
+            ) : ocrResult?.detectedAmount !== null && ocrResult?.detectedAmount !== undefined ? (
+              <p className="text-xs text-[#E8832A] mb-3">
+                ⚠ Vérifiez que le montant correspond exactement à votre ticket
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 mb-3">
+                Saisissez le montant TOTAL TTC indiqué sur votre ticket (max {maxAmount} €)
               </p>
             )}
             <div className="flex items-center gap-3">
@@ -549,10 +586,15 @@ export default function ScanPage() {
                 inputMode="decimal"
                 placeholder="0.00"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="flex-1 text-3xl font-nunito font-black text-[#2D5016] focus:outline-none bg-transparent"
-                autoFocus={!ocrResult?.detectedAmount}
+                onChange={(e) => {
+                  if (amountLocked) return;
+                  setAmount(e.target.value);
+                }}
+                readOnly={amountLocked}
+                className={`flex-1 text-3xl font-nunito font-black text-[#2D5016] focus:outline-none bg-transparent ${amountLocked ? 'cursor-default select-none' : ''}`}
+                autoFocus={!amountLocked && !ocrResult?.detectedAmount}
               />
+              {amountLocked && <span className="text-gray-300 text-lg">🔒</span>}
             </div>
             {amountError && <p className="text-red-500 text-xs mt-2">{amountError}</p>}
             {submitError && <p className="text-red-500 text-xs mt-2">Erreur : {submitError}</p>}

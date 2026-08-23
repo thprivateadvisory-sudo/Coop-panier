@@ -148,7 +148,7 @@ Pour date : date d'achat au format YYYY-MM-DD.`,
           const parsed = JSON.parse(jsonMatch[0]);
           const ocrStore: string | null = parsed.store ?? null;
           const ocrTotal: number | null =
-            typeof parsed.total === 'number' && parsed.total > 0 && parsed.total < 1000
+            typeof parsed.total === 'number' && parsed.total > 0 && parsed.total <= 300
               ? parsed.total
               : null;
           const ocrDate: string | null = parsed.date ?? null;
