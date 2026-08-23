@@ -106,7 +106,9 @@ export default function ContributorDashboard() {
         supabase.from('point_transactions')
           .select('created_at')
           .eq('profile_id', user.id)
-          .eq('type', 'earn_scan'),
+          .eq('type', 'earn_scan')
+          .gte('created_at', new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString())
+          .limit(500),
       ]);
 
       setProfile(prof);

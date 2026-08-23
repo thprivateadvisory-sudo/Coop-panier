@@ -53,13 +53,15 @@ export default function AssociationDashboard() {
     const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     setProfile(prof);
 
-    const { data: pickup } = await supabase
+    const { data: pickupRows } = await supabase
       .from('pickup_points')
       .select('id, name')
       .eq('association_profile_id', user.id)
       .eq('active', true)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
+    const pickup = pickupRows?.[0] ?? null;
     if (!pickup) { setLoading(false); return; }
     setPickupName(pickup.name);
     setPickupId(pickup.id);

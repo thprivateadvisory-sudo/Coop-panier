@@ -28,7 +28,7 @@ export default function Home() {
           </div>
           <div className="flex flex-col gap-3">
             <Link
-              href="/auth/login"
+              href="/auth/login?mode=signup"
               className="block w-full bg-white text-[#2D5016] font-nunito font-black py-4 rounded-2xl text-lg hover:bg-green-50 transition-colors shadow-lg text-center"
             >
               Commencer gratuitement
@@ -108,7 +108,7 @@ export default function Home() {
         </div>
 
         <Link
-          href="/auth/login"
+          href="/auth/login?mode=signup"
           className="block w-full font-nunito font-black py-4 rounded-2xl text-lg text-white mt-2 text-center"
           style={{ background: 'linear-gradient(135deg, #E8832A, #F09840)' }}
         >

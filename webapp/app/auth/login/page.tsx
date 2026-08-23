@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/lib/types';
@@ -14,9 +14,12 @@ const ROLES: { value: UserRole; label: string; emoji: string; desc: string }[] =
 
 type Mode = 'login' | 'signup' | 'forgot';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>('login');
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>(() =>
+    searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  );
   const [role, setRole] = useState<UserRole>('contributor');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +27,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    if (urlError) setError(decodeURIComponent(urlError));
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +46,11 @@ export default function LoginPage() {
         window.location.href = '/dashboard';
 
       } else if (mode === 'signup') {
+        if (password.length < 8) {
+          setError('Le mot de passe doit contenir au moins 8 caractères.');
+          setLoading(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -161,11 +174,15 @@ export default function LoginPage() {
               <input
                 type="password"
                 required
+                minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D5016]"
               />
+              {mode === 'signup' && (
+                <p className="text-xs text-gray-400 mt-1">8 caractères minimum</p>
+              )}
             </div>
           )}
 
@@ -195,5 +212,13 @@ export default function LoginPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

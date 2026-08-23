@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +12,16 @@ const STATUS_CONFIG = {
   suspended: { label: 'Suspendu',         color: '#DC2626', bg: '#FDECEC', border: '#DC2626' },
 };
 
+async function generateQR(userId: string, qrCode: string): Promise<string> {
+  const QRCode = (await import('qrcode')).default;
+  const payload = JSON.stringify({ id: userId, qr: qrCode });
+  return QRCode.toDataURL(payload, {
+    width: 280,
+    margin: 2,
+    color: { dark: '#2D5016', light: '#FFFFFF' },
+  });
+}
+
 export default function BeneficiaryDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -19,55 +29,71 @@ export default function BeneficiaryDashboard() {
   const [pickup, setPickup] = useState<PickupPoint | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [loading, setLoading] = useState(true);
+  const userIdRef = useRef('');
 
-  // Join pickup point flow
   const [availablePickups, setAvailablePickups] = useState<PickupPoint[]>([]);
   const [joining, setJoining] = useState<string | null>(null);
   const [joined, setJoined] = useState(false);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-  async function loadData() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/auth/login'); return; }
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/auth/login'); return; }
+      userIdRef.current = user.id;
 
-    const [{ data: prof }, { data: beneData }] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user.id).single(),
-      supabase.from('beneficiary_profiles').select('*').eq('profile_id', user.id).single(),
-    ]);
+      const [{ data: prof }, { data: beneData }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).single(),
+        supabase.from('beneficiary_profiles').select('*').eq('profile_id', user.id).single(),
+      ]);
 
-    setProfile(prof);
-    setBene(beneData);
+      setProfile(prof);
+      setBene(beneData);
 
-    if (beneData?.pickup_point_id) {
-      const { data: pickupData } = await supabase
-        .from('pickup_points')
-        .select('*')
-        .eq('id', beneData.pickup_point_id)
-        .single();
-      setPickup(pickupData);
-    } else {
-      // Load available pickup points to join
-      const { data: pickups } = await supabase
-        .from('pickup_points')
-        .select('*')
-        .eq('active', true);
-      setAvailablePickups(pickups ?? []);
+      if (beneData?.pickup_point_id) {
+        const { data: pickupData } = await supabase
+          .from('pickup_points')
+          .select('*')
+          .eq('id', beneData.pickup_point_id)
+          .single();
+        setPickup(pickupData);
+      } else {
+        const { data: pickups } = await supabase
+          .from('pickup_points')
+          .select('*')
+          .eq('active', true);
+        setAvailablePickups(pickups ?? []);
+      }
+
+      if (beneData?.qr_code && beneData?.status === 'active') {
+        setQrDataUrl(await generateQR(user.id, beneData.qr_code));
+      }
+
+      setLoading(false);
+
+      // Realtime: watch status and qr_code changes
+      channel = supabase
+        .channel('bene_' + user.id)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public',
+          table: 'beneficiary_profiles',
+          filter: `profile_id=eq.${user.id}`,
+        }, async (payload) => {
+          const updated = payload.new as BeneficiaryProfile;
+          setBene(updated);
+          if (updated.qr_code && updated.status === 'active') {
+            setQrDataUrl(await generateQR(user.id, updated.qr_code));
+          } else {
+            setQrDataUrl('');
+          }
+        })
+        .subscribe();
     }
 
-    if (beneData?.qr_code && beneData?.status === 'active') {
-      const QRCode = (await import('qrcode')).default;
-      const payload = JSON.stringify({ id: user.id, qr: beneData.qr_code, ts: Date.now() });
-      const url = await QRCode.toDataURL(payload, {
-        width: 280,
-        margin: 2,
-        color: { dark: '#2D5016', light: '#FFFFFF' },
-      });
-      setQrDataUrl(url);
-    }
-
-    setLoading(false);
-  }
+    loadData();
+    return () => { if (channel) supabase.removeChannel(channel); };
+  }, [router]);
 
   async function joinPickupPoint(pickupPointId: string) {
     setJoining(pickupPointId);
@@ -99,7 +125,6 @@ export default function BeneficiaryDashboard() {
     );
   }
 
-  // No pickup point yet → join flow
   if (!bene?.pickup_point_id && !joined) {
     return (
       <div className="min-h-screen bg-[#F8F7F4]">
@@ -179,7 +204,6 @@ export default function BeneficiaryDashboard() {
       </div>
 
       <div className="max-w-lg mx-auto px-6 -mt-14 pb-12 flex flex-col gap-5">
-        {/* Success banner after joining */}
         {joined && (
           <div className="bg-[#EEF4E8] border-2 border-[#2D5016] rounded-2xl p-4 text-center">
             <p className="font-nunito font-bold text-[#2D5016] text-sm">
