@@ -79,7 +79,9 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const base64Clean = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    const mediaTypeMatch = imageBase64.match(/^data:(image\/[a-z+]+);base64,/);
+    const mediaType = (mediaTypeMatch?.[1] ?? 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+    const base64Clean = imageBase64.replace(/^data:image\/[a-z+]+;base64,/, '');
 
     // 1. Upload image → Supabase Storage
     let imageUrl = '';
@@ -119,21 +121,29 @@ export async function POST(req: NextRequest) {
                   type: 'image',
                   source: {
                     type: 'base64',
-                    media_type: 'image/jpeg',
+                    media_type: mediaType,
                     data: base64Clean,
                   },
                 },
                 {
                   type: 'text',
-                  text: `Tu es un expert en lecture de tickets de caisse français. Lis attentivement chaque ligne de ce ticket et réponds UNIQUEMENT en JSON valide, sans markdown, sans explication.
+                  text: `Tu es un expert en lecture de tickets de caisse français, y compris les tickets digitaux (screenshots d'apps). Lis attentivement chaque ligne et réponds UNIQUEMENT en JSON valide, sans markdown, sans explication.
 
 Format attendu :
 {"store":"nom de l'enseigne ou null","total":montant_numerique_ou_null,"date":"YYYY-MM-DD ou null"}
 
 RÈGLES STRICTES :
-- store : nom de l'enseigne commerciale. Cherche en haut du ticket (logo, en-tête). Exemples : "E.Leclerc", "Lidl", "Carrefour", "Carrefour Market", "Auchan", "Intermarché", "Monoprix", "Super U", "Hyper U", "Casino", "Franprix", "Picard", "Biocoop". Si tu vois "Leclerc" ou "Centres E.Leclerc" → retourne "E.Leclerc". null seulement si vraiment illisible.
-- total : le MONTANT FINAL payé en euros. Cherche les mots-clés : TOTAL, TOTAL TTC, MONTANT TTC, À PAYER, NET À PAYER, VOUS AVEZ PAYÉ, ESPÈCES, CB, VISA, MASTERCARD (le montant juste après). C'est toujours le plus grand montant en bas du ticket. Ne prends PAS la TVA, PAS les sous-totaux. Retourne un nombre décimal (ex: 23.50). null si illisible.
-- date : date d'achat au format YYYY-MM-DD. Cherche DD/MM/YYYY ou DD-MM-YYYY ou DD.MM.YYYY sur le ticket. null si absent.`,
+
+store : nom de l'enseigne en haut du ticket (logo, en-tête). Ex : "E.Leclerc", "Lidl", "Carrefour", "Carrefour Market", "Auchan", "Intermarché", "Monoprix", "Super U", "Hyper U", "Casino", "Franprix", "Picard", "Biocoop". Si tu vois "Leclerc" ou "Centres E.Leclerc" → "E.Leclerc". null uniquement si vraiment illisible.
+
+total : montant RÉELLEMENT PAYÉ après toutes remises et réductions. PRIORITÉ de lecture (du plus fiable au moins fiable) :
+1. "RESTE À PAYER" ou "NET À PAYER" → c'est le montant après remises, prends-le
+2. "CB", "VISA", "MASTERCARD", "ESPÈCES" suivi d'un montant → montant effectivement encaissé
+3. "TOTAL TTC" ou "MONTANT TTC" si pas de remise appliquée
+4. "TOTAL X articles" en DERNIER RECOURS seulement si rien d'autre
+ATTENTION : si le ticket montre "Total X articles : 67.47" PUIS "Bon immediat : 9.91" PUIS "Reste à payer : 57.56", le bon montant est 57.56 (pas 67.47). Ne jamais prendre un sous-total avant remise. Retourne un nombre décimal (ex: 57.56). null si vraiment illisible.
+
+date : date d'achat au format YYYY-MM-DD. Cherche DD/MM/YYYY, DD/MM/YY, DD-MM-YYYY, "18 août 2026"… null si absent.`,
                 },
               ],
             },
