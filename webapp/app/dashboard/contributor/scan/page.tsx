@@ -174,7 +174,7 @@ export default function ScanPage() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d')?.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     setCapturedImage(dataUrl);
     stopCamera();
     analyzeImage(dataUrl);
@@ -186,9 +186,26 @@ export default function ScanPage() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      setCapturedImage(dataUrl);
-      stopCamera();
-      analyzeImage(dataUrl);
+      // Redimensionner si trop grande (max 2000px) pour accélérer l'OCR
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 2000;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        c.getContext('2d')?.drawImage(img, 0, 0, width, height);
+        const resized = c.toDataURL('image/jpeg', 0.95);
+        setCapturedImage(resized);
+        stopCamera();
+        analyzeImage(resized);
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   }
