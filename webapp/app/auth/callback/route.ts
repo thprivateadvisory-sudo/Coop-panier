@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(`${origin}/auth/login?error=${encodeURIComponent('Lien invalide ou expiré. Veuillez vous reconnecter.')}`);
+    }
   }
 
   const type = searchParams.get('type');

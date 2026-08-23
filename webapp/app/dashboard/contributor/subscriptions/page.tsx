@@ -59,7 +59,8 @@ function SubscriptionsContent() {
   useEffect(() => {
     loadData();
     // Retour depuis Stripe Checkout avec succès
-    const successTier = searchParams.get('success') as PlanId | null;
+    const rawTier = searchParams.get('success');
+    const successTier = PLANS.find((p) => p.id === rawTier) ? (rawTier as PlanId) : null;
     if (successTier) {
       setSuccess(successTier);
       setTimeout(() => setSuccess(null), 4000);
