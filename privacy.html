@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politique de confidentialité — Coop'Panier</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500;600&display=swap" />
+  <style>
+    :root {
+      --bg: #F5F8F2;
+      --surface: #FFFFFF;
+      --primary: #2D5016;
+      --primary-light: #3E6B1F;
+      --accent: #5C8A33;
+      --text: #1A2512;
+      --muted: #5E7250;
+      --border: #D0E2C4;
+      --tag-bg: #E8F2E0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #121A0C;
+        --surface: #1C2714;
+        --primary: #7DBF4A;
+        --primary-light: #8FCC5A;
+        --accent: #7DBF4A;
+        --text: #E8F2E0;
+        --muted: #8FA87A;
+        --border: #2E4220;
+        --tag-bg: #243318;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #121A0C;
+      --surface: #1C2714;
+      --primary: #7DBF4A;
+      --primary-light: #8FCC5A;
+      --accent: #7DBF4A;
+      --text: #E8F2E0;
+      --muted: #8FA87A;
+      --border: #2E4220;
+      --tag-bg: #243318;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    header {
+      background: var(--primary);
+      padding: 2rem 1.5rem;
+    }
+
+    .header-inner {
+      max-width: 740px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+    }
+
+    .brand span {
+      opacity: 0.7;
+      font-weight: 400;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-top: 1.25rem;
+      text-wrap: balance;
+      line-height: 1.25;
+    }
+
+    .meta {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.02em;
+    }
+
+    main {
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    .intro-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 3rem;
+      font-size: 0.9375rem;
+      color: var(--muted);
+    }
+
+    section {
+      margin-bottom: 2.75rem;
+    }
+
+    h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.875rem;
+      text-wrap: balance;
+    }
+
+    p {
+      margin-bottom: 0.875rem;
+      color: var(--text);
+      max-width: 65ch;
+    }
+
+    ul {
+      padding-left: 1.25rem;
+      margin-bottom: 0.875rem;
+    }
+
+    li {
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      list-style: none;
+      padding: 0;
+    }
+
+    .tag-list li {
+      background: var(--tag-bg);
+      color: var(--primary);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.3rem 0.75rem;
+      border-radius: 100px;
+      letter-spacing: 0.01em;
+      margin: 0;
+    }
+
+    .third-party-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .third-party-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    .third-party-card strong {
+      display: block;
+      color: var(--primary);
+      font-size: 0.9375rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .third-party-card p {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .rights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.875rem;
+      margin-top: 1rem;
+    }
+
+    .right-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+    }
+
+    .right-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--tag-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .right-item p {
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    .contact-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .contact-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--tag-bg);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .contact-box a {
+      color: var(--primary);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .contact-box a:hover { text-decoration: underline; }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.75rem 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      .third-party-grid { grid-template-columns: 1fr; }
+      .rights-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">Coop'Panier <span>/ Politique de confidentialité</span></div>
+    <h1 class="page-title">Vos données, notre engagement</h1>
+    <p class="meta">Dernière mise à jour : 24 août 2026</p>
+  </div>
+</header>
+
+<main>
+
+  <div class="intro-box">
+    Coop'Panier est une application solidaire. Nous traitons vos données uniquement pour faire fonctionner le service et financer des paniers alimentaires. Nous ne vendons aucune donnée personnelle.
+  </div>
+
+  <section>
+    <h2>1. Qui sommes-nous ?</h2>
+    <p>Coop'Panier est une application mobile de solidarité alimentaire permettant à des contributeurs de scanner leurs tickets de caisse afin de générer des points utilisés pour financer des paniers alimentaires au profit de bénéficiaires.</p>
+    <p>Responsable du traitement : <strong>Coop'Panier</strong> — contact : <a href="mailto:thprivateadvisory@gmail.com" style="color:var(--primary)">thprivateadvisory@gmail.com</a></p>
+  </section>
+
+  <section>
+    <h2>2. Données collectées</h2>
+    <p>Selon votre rôle dans l'application :</p>
+    <ul class="tag-list">
+      <li>Adresse e-mail</li>
+      <li>Prénom / nom</li>
+      <li>Photos de tickets de caisse</li>
+      <li>Montants de courses</li>
+      <li>Points accumulés</li>
+      <li>Historique des transactions</li>
+      <li>QR code bénéficiaire</li>
+      <li>Informations d'abonnement</li>
+    </ul>
+    <p style="margin-top:1rem">Nous ne collectons pas votre localisation GPS, vos contacts téléphoniques, ni vos données de santé.</p>
+  </section>
+
+  <section>
+    <h2>3. Finalités du traitement</h2>
+    <ul>
+      <li>Créer et gérer votre compte utilisateur</li>
+      <li>Scanner et analyser vos tickets de caisse (OCR) pour créditer des points</li>
+      <li>Financer et distribuer des paniers alimentaires solidaires</li>
+      <li>Gérer vos abonnements et paiements</li>
+      <li>Envoyer des notifications liées à votre compte (si activées)</li>
+      <li>Assurer la sécurité et prévenir les fraudes</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>4. Sous-traitants tiers</h2>
+    <p>Nous faisons appel aux prestataires suivants, tous conformes au RGPD :</p>
+    <div class="third-party-grid">
+      <div class="third-party-card">
+        <strong>Supabase</strong>
+        <p>Hébergement de la base de données et authentification (serveurs EU)</p>
+      </div>
+      <div class="third-party-card">
+        <strong>Stripe</strong>
+        <p>Traitement sécurisé des paiements et abonnements</p>
+      </div>
+      <div class="third-party-card">
+        <strong>Google Cloud Vision</strong>
+        <p>Lecture automatique (OCR) de vos tickets de caisse</p>
+      </div>
+      <div class="third-party-card">
+        <strong>Expo / EAS</strong>
+        <p>Distribution et mises à jour de l'application mobile</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Durée de conservation</h2>
+    <ul>
+      <li><strong>Données de compte</strong> : conservées tant que le compte est actif</li>
+      <li><strong>Tickets de caisse (images)</strong> : 12 mois après le scan</li>
+      <li><strong>Données de paiement</strong> : selon les obligations légales (5 ans)</li>
+      <li>À la suppression du compte, toutes les données personnelles sont effacées sous 30 jours</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6. Vos droits (RGPD)</h2>
+    <div class="rights-grid">
+      <div class="right-item">
+        <div class="right-icon">👁</div>
+        <p><strong>Accès</strong> — consulter vos données</p>
+      </div>
+      <div class="right-item">
+        <div class="right-icon">✏️</div>
+        <p><strong>Rectification</strong> — corriger vos infos</p>
+      </div>
+      <div class="right-item">
+        <div class="right-icon">🗑</div>
+        <p><strong>Suppression</strong> — effacer votre compte</p>
+      </div>
+      <div class="right-item">
+        <div class="right-icon">📦</div>
+        <p><strong>Portabilité</strong> — exporter vos données</p>
+      </div>
+      <div class="right-item">
+        <div class="right-icon">🚫</div>
+        <p><strong>Opposition</strong> — refuser certains traitements</p>
+      </div>
+      <div class="right-item">
+        <div class="right-icon">⏸</div>
+        <p><strong>Limitation</strong> — restreindre l'usage</p>
+      </div>
+    </div>
+    <p style="margin-top:1.25rem">Pour exercer vos droits, contactez-nous à <a href="mailto:thprivateadvisory@gmail.com" style="color:var(--primary)">thprivateadvisory@gmail.com</a>. Vous pouvez également saisir la CNIL (<a href="https://www.cnil.fr" style="color:var(--primary)">cnil.fr</a>).</p>
+  </section>
+
+  <section>
+    <h2>7. Sécurité</h2>
+    <p>Toutes les communications sont chiffrées via HTTPS/TLS. Les mots de passe ne sont jamais stockés en clair. L'accès aux données est restreint aux seuls systèmes nécessaires au fonctionnement du service.</p>
+  </section>
+
+  <section>
+    <h2>8. Mineurs</h2>
+    <p>Coop'Panier est destinée aux personnes âgées de 18 ans et plus. Nous ne collectons pas sciemment de données concernant des mineurs.</p>
+  </section>
+
+  <section>
+    <h2>9. Modifications</h2>
+    <p>Cette politique peut être mise à jour. En cas de modification substantielle, nous vous en informerons par notification dans l'application. La date de mise à jour est indiquée en haut de cette page.</p>
+  </section>
+
+  <hr />
+
+  <section>
+    <h2>Nous contacter</h2>
+    <div class="contact-box">
+      <div class="contact-icon">✉️</div>
+      <div>
+        <p style="margin:0;font-weight:500">Une question sur vos données ?</p>
+        <p style="margin:0;font-size:0.9rem;color:var(--muted)">Réponse garantie sous 72h ouvrées</p>
+        <a href="mailto:thprivateadvisory@gmail.com">thprivateadvisory@gmail.com</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  &copy; 2026 Coop'Panier — Tous droits réservés
+</footer>
+
+</body>
+</html>
