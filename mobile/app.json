@@ -25,6 +25,7 @@
         "backgroundColor": "#2D5016"
       },
       "package": "fr.cooppanier.app",
+      "versionCode": 1,
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "web": {
