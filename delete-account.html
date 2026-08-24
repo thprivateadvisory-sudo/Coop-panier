@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supprimer mon compte — Coop'Panier</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@400;500;600&display=swap" />
+  <style>
+    :root {
+      --bg: #F5F8F2;
+      --surface: #FFFFFF;
+      --primary: #2D5016;
+      --accent: #5C8A33;
+      --text: #1A2512;
+      --muted: #5E7250;
+      --border: #D0E2C4;
+      --tag-bg: #E8F2E0;
+      --danger: #C0392B;
+      --danger-bg: #FDF2F2;
+      --danger-border: #F5C6C6;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #121A0C;
+        --surface: #1C2714;
+        --primary: #7DBF4A;
+        --text: #E8F2E0;
+        --muted: #8FA87A;
+        --border: #2E4220;
+        --tag-bg: #243318;
+        --danger-bg: #2A1010;
+        --danger-border: #5C2020;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #121A0C;
+      --surface: #1C2714;
+      --primary: #7DBF4A;
+      --text: #E8F2E0;
+      --muted: #8FA87A;
+      --border: #2E4220;
+      --tag-bg: #243318;
+      --danger-bg: #2A1010;
+      --danger-border: #5C2020;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    header {
+      background: var(--primary);
+      padding: 2rem 1.5rem;
+    }
+
+    .header-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .brand span { opacity: 0.7; font-weight: 400; }
+
+    .page-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.6rem, 4vw, 2.25rem);
+      font-weight: 600;
+      color: #FFFFFF;
+      margin-top: 1.25rem;
+      line-height: 1.25;
+    }
+
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    .warning-box {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-left: 4px solid var(--danger);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 0.9375rem;
+      color: var(--danger);
+    }
+
+    h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      margin-bottom: 0.875rem;
+      color: var(--text);
+    }
+
+    ul {
+      padding-left: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    li {
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    section { margin-bottom: 2.5rem; }
+
+    .steps {
+      counter-reset: steps;
+      list-style: none;
+      padding: 0;
+    }
+
+    .steps li {
+      counter-increment: steps;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .steps li::before {
+      content: counter(steps);
+      min-width: 28px;
+      height: 28px;
+      background: var(--tag-bg);
+      color: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .cta-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .cta-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--tag-bg);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.375rem;
+      flex-shrink: 0;
+    }
+
+    .cta-box a {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.9375rem;
+    }
+
+    .cta-box a:hover { opacity: 0.88; }
+
+    .note {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">Coop'Panier <span>/ Suppression de compte</span></div>
+    <h1 class="page-title">Supprimer mon compte</h1>
+  </div>
+</header>
+
+<main>
+
+  <div class="warning-box">
+    ⚠️ La suppression de votre compte est définitive. Toutes vos données personnelles seront effacées sous 30 jours.
+  </div>
+
+  <section>
+    <h2>Ce qui sera supprimé</h2>
+    <ul>
+      <li>Votre adresse e-mail et informations de profil</li>
+      <li>Votre historique de tickets de caisse</li>
+      <li>Vos points accumulés</li>
+      <li>Vos données d'abonnement</li>
+    </ul>
+    <p class="note">Les données de paiement sont conservées 5 ans conformément aux obligations légales françaises.</p>
+  </section>
+
+  <section>
+    <h2>Comment supprimer votre compte</h2>
+    <ol class="steps">
+      <li>Ouvrez l'application Coop'Panier</li>
+      <li>Allez dans <strong>Profil → Paramètres</strong></li>
+      <li>Appuyez sur <strong>Supprimer mon compte</strong></li>
+      <li>Confirmez la suppression</li>
+    </ol>
+    <p>Ou contactez-nous par e-mail pour une suppression manuelle :</p>
+  </section>
+
+  <div class="cta-box">
+    <div class="cta-icon">✉️</div>
+    <div>
+      <p style="font-weight:500;margin:0">Demander la suppression par e-mail</p>
+      <p class="note">Réponse et traitement sous 30 jours</p>
+      <a href="mailto:thprivateadvisory@gmail.com?subject=Suppression%20de%20compte%20Coop%27Panier&body=Bonjour%2C%0A%0AJe%20souhaite%20supprimer%20mon%20compte%20Coop%27Panier.%0A%0AAdresse%20e-mail%20du%20compte%20%3A%20%5Bvotre%20adresse%5D%0A%0AMerci.">
+        Envoyer la demande
+      </a>
+    </div>
+  </div>
+
+  <hr />
+
+  <p style="font-size:0.9rem;color:var(--muted)">
+    Pour toute question sur vos données, consultez notre <a href="./privacy.html" style="color:var(--primary)">politique de confidentialité</a>.
+  </p>
+
+</main>
+
+<footer>
+  &copy; 2026 Coop'Panier — Tous droits réservés
+</footer>
+
+</body>
+</html>
