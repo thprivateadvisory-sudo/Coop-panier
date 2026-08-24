@@ -26,7 +26,6 @@
       },
       "package": "fr.cooppanier.app",
       "versionCode": 2,
-      "targetSdkVersion": 35,
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "web": {
@@ -47,6 +46,16 @@
       ],
       "expo-notifications",
       "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ],
       [
         "@stripe/stripe-react-native",
         {
