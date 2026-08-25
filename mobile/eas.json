@@ -14,8 +14,10 @@
       }
     },
     "production": {
+      "resourceClass": "medium",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "resourceClass": "medium"
       }
     }
   },
