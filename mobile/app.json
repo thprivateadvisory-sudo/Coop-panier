@@ -32,7 +32,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "./plugins/withGradleProperties",
+      "./plugins/withAndroidBuildGradle",
       [
         "expo-camera",
         {
@@ -47,15 +47,6 @@
       ],
       "expo-notifications",
       "expo-secure-store",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35
-          }
-        }
-      ],
       [
         "@stripe/stripe-react-native",
         {
