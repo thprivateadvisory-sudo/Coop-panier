@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.xxl },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  greeting: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 24, color: colors.gris },
-  subGreeting: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
+  greeting: { fontFamily: 'Nunito-Black', fontSize: 24, color: colors.gris },
+  subGreeting: { fontFamily: 'Inter-Regular', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
   avatar: {
     width: 42,
     height: 42,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 18, color: colors.blanc },
+  avatarText: { fontFamily: 'Nunito-ExtraBold', fontSize: 18, color: colors.blanc },
 
   pointsCard: {
     backgroundColor: colors.vert,
@@ -196,10 +196,9 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   pointsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  pointsLabel: { fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,255,255,0.7)' },
+  pointsLabel: { fontFamily: 'Inter-Regular', fontSize: 13, color: 'rgba(255,255,255,0.7)' },
   pointsValue: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito-Black',
     fontSize: 48,
     color: colors.blanc,
     lineHeight: 52,
@@ -210,10 +209,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'flex-end',
   },
-  badgeTotalLabel: { fontFamily: 'Inter', fontSize: 11, color: 'rgba(255,255,255,0.7)' },
+  badgeTotalLabel: { fontFamily: 'Inter-Regular', fontSize: 11, color: 'rgba(255,255,255,0.7)' },
   badgeTotalValue: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     fontSize: 20,
     color: colors.blanc,
   },
@@ -225,7 +223,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressFill: { height: '100%', backgroundColor: colors.orange, borderRadius: radius.full },
-  progressLabel: { fontFamily: 'Inter', fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+  progressLabel: { fontFamily: 'Inter-Regular', fontSize: 12, color: 'rgba(255,255,255,0.8)' },
 
   scanBtn: {
     flexDirection: 'row',
@@ -238,8 +236,8 @@ const styles = StyleSheet.create({
     borderColor: colors.bordure,
   },
   scanEmoji: { fontSize: 32 },
-  scanTitle: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 16, color: colors.gris },
-  scanSub: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
+  scanTitle: { fontFamily: 'Nunito-ExtraBold', fontSize: 16, color: colors.gris },
+  scanSub: { fontFamily: 'Inter-Regular', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
   scanArrow: { marginLeft: 'auto', fontSize: 24, color: colors.grisMoyen },
 
   quickStats: {
@@ -253,13 +251,12 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
   statDivider: { width: 1, backgroundColor: colors.bordure },
   statNum: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito-Black',
     fontSize: 22,
     color: colors.vert,
   },
   statLabel: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 11,
     color: colors.grisMoyen,
     textAlign: 'center',
@@ -268,7 +265,7 @@ const styles = StyleSheet.create({
   },
 
   section: { gap: spacing.md },
-  sectionTitle: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 16, color: colors.gris },
+  sectionTitle: { fontFamily: 'Nunito-ExtraBold', fontSize: 16, color: colors.gris },
   impactGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   impactTile: {
     flex: 1,
@@ -283,13 +280,12 @@ const styles = StyleSheet.create({
   },
   impactEmoji: { fontSize: 24 },
   impactValue: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito-Black',
     fontSize: 20,
     color: colors.gris,
   },
   impactLabel: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 11,
     color: colors.grisMoyen,
     textAlign: 'center',
@@ -307,7 +303,7 @@ const styles = StyleSheet.create({
   },
   upgradeEmoji: { fontSize: 28 },
   upgradeBody: { flex: 1 },
-  upgradeTitle: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 14, color: colors.gris },
-  upgradeSub: { fontFamily: 'Inter', fontSize: 12, color: colors.grisMoyen, marginTop: 2 },
+  upgradeTitle: { fontFamily: 'Nunito-ExtraBold', fontSize: 14, color: colors.gris },
+  upgradeSub: { fontFamily: 'Inter-Regular', fontSize: 12, color: colors.grisMoyen, marginTop: 2 },
   upgradeArrow: { fontSize: 22, color: colors.orange },
 });

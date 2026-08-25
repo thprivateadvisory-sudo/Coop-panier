@@ -122,15 +122,14 @@ const styles = StyleSheet.create({
   },
   emoji: { fontSize: 72, marginBottom: spacing.xl },
   title: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito-Black',
     fontSize: 30,
     textAlign: 'center',
     lineHeight: 36,
     marginBottom: spacing.md,
   },
   subtitle: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
@@ -153,13 +152,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnText: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     fontSize: 16,
     color: colors.blanc,
   },
   skip: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: colors.grisMoyen,
   },

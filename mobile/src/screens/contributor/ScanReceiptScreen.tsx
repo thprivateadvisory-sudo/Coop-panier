@@ -226,9 +226,9 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.lg },
 
   backBtn: { marginBottom: spacing.sm },
-  backText: { fontFamily: 'Inter', fontSize: 15, color: colors.vert },
-  title: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 28, color: colors.gris },
-  subtitle: { fontFamily: 'Inter', fontSize: 15, color: colors.grisMoyen, lineHeight: 22 },
+  backText: { fontFamily: 'Inter-Regular', fontSize: 15, color: colors.vert },
+  title: { fontFamily: 'Nunito-Black', fontSize: 28, color: colors.gris },
+  subtitle: { fontFamily: 'Inter-Regular', fontSize: 15, color: colors.grisMoyen, lineHeight: 22 },
 
   mainOption: {
     backgroundColor: colors.vert,
@@ -239,13 +239,12 @@ const styles = StyleSheet.create({
   },
   mainOptionEmoji: { fontSize: 48 },
   mainOptionTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     fontSize: 18,
     color: colors.blanc,
   },
   mainOptionSub: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 13,
     color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
@@ -263,8 +262,7 @@ const styles = StyleSheet.create({
   },
   secondaryOptionEmoji: { fontSize: 24 },
   secondaryOptionTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '700',
+    fontFamily: 'Nunito-Bold',
     fontSize: 15,
     color: colors.gris,
   },
@@ -276,13 +274,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   tipsTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '700',
+    fontFamily: 'Nunito-Bold',
     fontSize: 13,
     color: colors.vert,
     marginBottom: spacing.xs,
   },
-  tip: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen },
+  tip: { fontFamily: 'Inter-Regular', fontSize: 13, color: colors.grisMoyen },
 
   // Camera
   cameraContainer: { flex: 1, backgroundColor: '#000' },
@@ -302,7 +299,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
   cameraHint: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: colors.blanc,
     textAlign: 'center',
@@ -329,7 +326,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.blanc,
   },
   cancelBtn: { padding: spacing.sm },
-  cancelText: { fontFamily: 'Inter', fontSize: 15, color: 'rgba(255,255,255,0.7)' },
+  cancelText: { fontFamily: 'Inter-Regular', fontSize: 15, color: 'rgba(255,255,255,0.7)' },
 
   // Processing
   processingContainer: {
@@ -341,13 +338,12 @@ const styles = StyleSheet.create({
     padding: spacing.xxl,
   },
   processingTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     fontSize: 22,
     color: colors.gris,
   },
   processingSub: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: colors.grisMoyen,
     textAlign: 'center',
@@ -355,8 +351,7 @@ const styles = StyleSheet.create({
 
   // Result
   resultTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito-Black',
     fontSize: 26,
     color: colors.vert,
   },
@@ -374,8 +369,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.bordure,
   },
-  resultLabel: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen },
-  resultValue: { fontFamily: 'Nunito', fontWeight: '700', fontSize: 14, color: colors.gris },
+  resultLabel: { fontFamily: 'Inter-Regular', fontSize: 14, color: colors.grisMoyen },
+  resultValue: { fontFamily: 'Nunito-Bold', fontSize: 14, color: colors.gris },
   pointsBanner: {
     backgroundColor: colors.vertPale,
     borderRadius: radius.md,
@@ -384,13 +379,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   pointsBannerLabel: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 13,
     color: colors.grisMoyen,
   },
   pointsBannerValue: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito-Black',
     fontSize: 40,
     color: colors.vert,
   },
@@ -401,13 +395,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmBtnText: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito-ExtraBold',
     fontSize: 16,
     color: colors.blanc,
   },
   retryText: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: colors.grisMoyen,
     textAlign: 'center',

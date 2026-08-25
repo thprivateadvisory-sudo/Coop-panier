@@ -187,12 +187,12 @@ export function AuthScreen({ route, navigation }: Props) {
               <View style={styles.field}>
                 <Text style={styles.label}>
                   Code de parrainage{' '}
-                  <Text style={{ color: colors.grisClair, textTransform: 'none', fontWeight: '400' }}>
+                  <Text style={{ fontFamily: 'Inter-Regular', color: colors.grisClair, textTransform: 'none' }}>
                     (facultatif)
                   </Text>
                 </Text>
                 <TextInput
-                  style={[styles.input, { fontFamily: 'Inter', letterSpacing: 3 }]}
+                  style={[styles.input, { fontFamily: 'Inter-Regular', letterSpacing: 3 }]}
                   placeholder="Ex : X3K9PL"
                   placeholderTextColor={colors.grisClair}
                   value={referralCode}
@@ -201,7 +201,7 @@ export function AuthScreen({ route, navigation }: Props) {
                   maxLength={6}
                 />
                 {referralCode.length > 0 && (
-                  <Text style={{ fontFamily: 'Inter', fontSize: 12, color: colors.vert, marginTop: 2 }}>
+                  <Text style={{ fontFamily: 'Inter-Regular', fontSize: 12, color: colors.vert, marginTop: 2 }}>
                     +50 pts offerts à l'inscription !
                   </Text>
                 )}
@@ -294,17 +294,17 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.lg, flexGrow: 1 },
 
   back: { marginBottom: spacing.sm },
-  backText: { fontFamily: 'Inter', fontSize: 15, color: colors.vert },
+  backText: { fontFamily: 'Inter-Regular', fontSize: 15, color: colors.vert },
 
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
-  title: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 28, color: colors.gris },
+  title: { fontFamily: 'Nunito-Black', fontSize: 28, color: colors.gris },
   roleBadge: {
     backgroundColor: colors.vertPale,
     borderRadius: radius.full,
     paddingHorizontal: 12,
     paddingVertical: 4,
   },
-  roleBadgeText: { fontFamily: 'Inter', fontWeight: '600', fontSize: 12, color: colors.vert },
+  roleBadgeText: { fontFamily: 'Inter-SemiBold', fontSize: 12, color: colors.vert },
 
   toggle: {
     flexDirection: 'row',
@@ -319,14 +319,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   toggleBtnActive: { backgroundColor: colors.blanc },
-  toggleText: { fontFamily: 'Nunito', fontWeight: '700', fontSize: 14, color: colors.grisMoyen },
+  toggleText: { fontFamily: 'Nunito-Bold', fontSize: 14, color: colors.grisMoyen },
   toggleTextActive: { color: colors.gris },
 
   form: { gap: spacing.md },
   field: { gap: spacing.xs },
   label: {
-    fontFamily: 'Inter',
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     fontSize: 12,
     color: colors.grisMoyen,
     textTransform: 'uppercase',
@@ -337,7 +336,7 @@ const styles = StyleSheet.create({
     borderColor: colors.bordure,
     borderRadius: radius.md,
     padding: spacing.md,
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 15,
     color: colors.gris,
     backgroundColor: colors.blanc,
@@ -354,11 +353,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.sm,
   },
-  submitText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 16, color: colors.blanc },
+  submitText: { fontFamily: 'Nunito-ExtraBold', fontSize: 16, color: colors.blanc },
 
   separator: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   separatorLine: { flex: 1, height: 1, backgroundColor: colors.bordure },
-  separatorText: { fontFamily: 'Inter', fontSize: 13, color: colors.grisClair },
+  separatorText: { fontFamily: 'Inter-Regular', fontSize: 13, color: colors.grisClair },
 
   magicBtn: {
     borderWidth: 1.5,
@@ -367,10 +366,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  magicBtnText: { fontFamily: 'Nunito', fontWeight: '700', fontSize: 14, color: colors.gris },
+  magicBtnText: { fontFamily: 'Nunito-Bold', fontSize: 14, color: colors.gris },
 
   legal: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter-Regular',
     fontSize: 11,
     color: colors.grisClair,
     textAlign: 'center',
