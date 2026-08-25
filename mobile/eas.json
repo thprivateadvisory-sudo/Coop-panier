@@ -18,11 +18,10 @@
     },
     "production": {
       "android": {
-        "buildType": "app-bundle",
-        "resourceClass": "large"
+        "buildType": "app-bundle"
       },
       "env": {
-        "GRADLE_OPTS": "-Xmx4096m -XX:MaxMetaspaceSize=512m"
+        "GRADLE_OPTS": "-Xmx2048m -XX:MaxMetaspaceSize=512m"
       }
     }
   },
