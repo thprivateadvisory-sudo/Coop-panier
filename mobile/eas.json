@@ -20,9 +20,8 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "prebuildCommand": "expo prebuild --non-interactive --clean && sed -i '/enableBundleCompression/d' android/app/build.gradle",
       "cache": {
-        "key": "v4-sed-patch"
+        "key": "v5-committed-gradle"
       },
       "env": {
         "GRADLE_OPTS": "-Xmx2048m -XX:MaxMetaspaceSize=512m"
