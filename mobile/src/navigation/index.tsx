@@ -14,6 +14,8 @@ import { AuthScreen } from '@/screens/onboarding/AuthScreen';
 import { ContributorHomeScreen } from '@/screens/contributor/HomeScreen';
 import { ScanReceiptScreen } from '@/screens/contributor/ScanReceiptScreen';
 import { SubscriptionsScreen } from '@/screens/contributor/SubscriptionsScreen';
+import { CommunautyScreen } from '@/screens/contributor/CommunautyScreen';
+import { HistoryScreen } from '@/screens/contributor/HistoryScreen';
 import { BeneficiaryCardScreen } from '@/screens/beneficiary/CardScreen';
 import { ProfileScreen } from '@/screens/contributor/ProfileScreen';
 import { AssociationHomeScreen } from '@/screens/association/AssociationHomeScreen';
@@ -22,6 +24,17 @@ import { BeneficiaryListScreen } from '@/screens/association/BeneficiaryListScre
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const ContributorStack = createNativeStackNavigator();
+
+function ContributorHomeStack() {
+  return (
+    <ContributorStack.Navigator screenOptions={{ headerShown: false }}>
+      <ContributorStack.Screen name="Home" component={ContributorHomeScreen} />
+      <ContributorStack.Screen name="Subscriptions" component={SubscriptionsScreen} />
+    </ContributorStack.Navigator>
+  );
+}
 
 function ContributorTabs() {
   return (
@@ -37,8 +50,8 @@ function ContributorTabs() {
       }}
     >
       <Tab.Screen
-        name="Home"
-        component={ContributorHomeScreen}
+        name="HomeTab"
+        component={ContributorHomeStack}
         options={{
           tabBarLabel: 'Accueil',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🏠</Text>,
@@ -53,11 +66,19 @@ function ContributorTabs() {
         }}
       />
       <Tab.Screen
-        name="Subscriptions"
-        component={SubscriptionsScreen}
+        name="Communauty"
+        component={CommunautyScreen}
         options={{
-          tabBarLabel: 'Abonnement',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>⚡</Text>,
+          tabBarLabel: 'Communauté',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🤝</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="History"
+        component={HistoryScreen}
+        options={{
+          tabBarLabel: 'Historique',
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>📋</Text>,
         }}
       />
       <Tab.Screen
