@@ -71,12 +71,18 @@ public class BarCodeScannerResult {
 `;
 
 module.exports = function withAndroidFixes(config) {
-  // 1. Supprime enableBundleCompression (retiré dans RN 0.76)
+  // 1. App-level build.gradle patches
   config = withAppBuildGradle(config, (config) => {
-    config.modResults.contents = config.modResults.contents.replace(
-      /^[ \t]*enableBundleCompression[^\n]*\n?/gm,
-      ''
-    );
+    let contents = config.modResults.contents;
+    // Remove deprecated enableBundleCompression (removed in RN 0.76)
+    contents = contents.replace(/^[ \t]*enableBundleCompression[^\n]*\n?/gm, '');
+    // Force SDK 35 — handles both old (compileSdkVersion/targetSdkVersion) and new AGP (compileSdk/targetSdk) naming
+    // \b word boundary ensures compileSdk does not match inside compileSdkVersion
+    contents = contents.replace(/\bcompileSdkVersion\b[^\n]*/g, 'compileSdkVersion 35');
+    contents = contents.replace(/\bcompileSdk\b[^\n]*/g, 'compileSdk 35');
+    contents = contents.replace(/\btargetSdkVersion\b[^\n]*/g, 'targetSdkVersion 35');
+    contents = contents.replace(/\btargetSdk\b[^\n]*/g, 'targetSdk 35');
+    config.modResults.contents = contents;
     return config;
   });
 
@@ -100,12 +106,15 @@ module.exports = function withAndroidFixes(config) {
     return config;
   });
 
-  // 3. Enforce compileSdkVersion=35, kotlinVersion=2.0.21 dans le build.gradle racine
+  // 3. Root build.gradle: enforce SDK 35 and kotlin version
   config = withProjectBuildGradle(config, (config) => {
     if (config.modResults.language === 'groovy') {
       let contents = config.modResults.contents;
-      contents = contents.replace(/compileSdkVersion\s*=\s*\d+/g, 'compileSdkVersion = 35');
-      contents = contents.replace(/targetSdkVersion\s*=\s*\d+/g, 'targetSdkVersion = 35');
+      // Handle both old and new AGP naming in the root ext block
+      contents = contents.replace(/\bcompileSdkVersion\b[^\n]*/g, 'compileSdkVersion = 35');
+      contents = contents.replace(/\bcompileSdk\b[^\n]*/g, 'compileSdk = 35');
+      contents = contents.replace(/\btargetSdkVersion\b[^\n]*/g, 'targetSdkVersion = 35');
+      contents = contents.replace(/\btargetSdk\b[^\n]*/g, 'targetSdk = 35');
       contents = contents.replace(/kotlinVersion\s*=\s*["'][^"']*["']/g, 'kotlinVersion = "2.0.21"');
       config.modResults.contents = contents;
     }
