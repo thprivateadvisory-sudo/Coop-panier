@@ -20,6 +20,9 @@
       "android": {
         "buildType": "app-bundle"
       },
+      "cache": {
+        "key": "v3-no-stripe"
+      },
       "env": {
         "GRADLE_OPTS": "-Xmx2048m -XX:MaxMetaspaceSize=512m"
       }
