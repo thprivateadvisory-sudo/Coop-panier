@@ -26,7 +26,6 @@
       },
       "package": "fr.cooppanier.app",
       "versionCode": 4,
-      "targetSdkVersion": 35,
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "web": {
@@ -46,13 +45,7 @@
         }
       ],
       "expo-notifications",
-      "expo-secure-store",
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.fr.cooppanier"
-        }
-      ]
+      "expo-secure-store"
     ],
     "extra": {
       "supabaseUrl": "https://gzykmayyxkyamymaknsq.supabase.co",
