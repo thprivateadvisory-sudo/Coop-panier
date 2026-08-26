@@ -148,17 +148,28 @@ export async function POST(req: NextRequest) {
 
     // Send push notification (non-blocking)
     const basketMilestone = newBaskets > oldBaskets;
-    sendPushToUser(authUser.id, basketMilestone
-      ? {
-          title: '🧺 Panier financé !',
-          body: `Grâce à vous, le panier #${newBaskets} est financé. Merci !`,
-          url: '/dashboard/contributor',
-        }
-      : {
-          title: `+${earned} points gagnés 🎉`,
-          body: `Ticket ${storeName ?? 'validé'} — ${detectedAmount.toFixed(2)} € enregistré.`,
-          url: '/dashboard/contributor',
-        }
+    const nextMilestone = (newBaskets + 1) * 500;
+    const pointsToNext = nextMilestone - newTotal;
+    const nearMilestone = !basketMilestone && pointsToNext <= 100 && pointsToNext > 0;
+
+    sendPushToUser(authUser.id,
+      basketMilestone
+        ? {
+            title: '🧺 Panier financé !',
+            body: `Grâce à vous, le panier #${newBaskets} est financé. Merci !`,
+            url: '/dashboard/contributor',
+          }
+        : nearMilestone
+        ? {
+            title: '🎯 Vous y êtes presque !',
+            body: `Plus que ${pointsToNext} points pour financer votre prochain panier. Scannez vos tickets !`,
+            url: '/dashboard/contributor',
+          }
+        : {
+            title: `+${earned} points gagnés 🎉`,
+            body: `Ticket ${storeName ?? 'validé'} — ${detectedAmount.toFixed(2)} € enregistré.`,
+            url: '/dashboard/contributor',
+          }
     ).catch(() => {}); // Never block the response if push fails
 
     return NextResponse.json({
