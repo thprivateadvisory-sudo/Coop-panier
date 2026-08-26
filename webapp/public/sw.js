@@ -33,6 +33,36 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+// ── PUSH NOTIFICATIONS ───────────────────────────────────────
+self.addEventListener('push', (e) => {
+  const data = e.data ? e.data.json() : {};
+  e.waitUntil(
+    self.registration.showNotification(data.title ?? 'Coop Panier', {
+      body: data.body ?? '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { url: data.url ?? '/dashboard/contributor' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      const target = e.notification.data?.url ?? '/dashboard/contributor';
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(target);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(target);
+    })
+  );
+});
+
+// ── CACHE / FETCH ─────────────────────────────────────────────
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
 

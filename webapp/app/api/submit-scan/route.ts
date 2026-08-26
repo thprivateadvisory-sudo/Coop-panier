@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { sendPushToUser } from '@/lib/push';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -144,6 +145,21 @@ export async function POST(req: NextRequest) {
         .update({ baskets_funded: newBaskets })
         .eq('profile_id', authUser.id);
     }
+
+    // Send push notification (non-blocking)
+    const basketMilestone = newBaskets > oldBaskets;
+    sendPushToUser(authUser.id, basketMilestone
+      ? {
+          title: '🧺 Panier financé !',
+          body: `Grâce à vous, le panier #${newBaskets} est financé. Merci !`,
+          url: '/dashboard/contributor',
+        }
+      : {
+          title: `+${earned} points gagnés 🎉`,
+          body: `Ticket ${storeName ?? 'validé'} — ${detectedAmount.toFixed(2)} € enregistré.`,
+          url: '/dashboard/contributor',
+        }
+    ).catch(() => {}); // Never block the response if push fails
 
     return NextResponse.json({
       earned,
