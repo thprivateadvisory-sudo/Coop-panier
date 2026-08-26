@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
+import { createHmac } from 'crypto';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -179,6 +180,16 @@ date : date d'achat au format YYYY-MM-DD. Cherche DD/MM/YYYY, DD/MM/YY, DD-MM-YY
 
     const confidence = detectedAmount !== null ? 0.92 : storeChain !== null ? 0.6 : 0.3;
 
+    // Sign the detected amount so the submission endpoint can verify it wasn't tampered with
+    let amountToken: string | null = null;
+    if (detectedAmount !== null) {
+      const secret = process.env.SCAN_HMAC_SECRET ?? SUPABASE_SERVICE_KEY;
+      const window = Math.floor(Date.now() / 300000); // 5-minute window
+      amountToken = createHmac('sha256', secret)
+        .update(`${detectedAmount}|${authUser.id}|${window}`)
+        .digest('hex');
+    }
+
     return NextResponse.json({
       storeChain,
       storeName: storeChain ?? rawName,
@@ -187,6 +198,7 @@ date : date d'achat au format YYYY-MM-DD. Cherche DD/MM/YYYY, DD/MM/YY, DD-MM-YY
       confidence,
       imageUrl,
       ocrAvailable: !!anthropicKey,
+      amountToken,
     });
   } catch (err) {
     console.error('[scan-receipt]', err);

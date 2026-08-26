@@ -48,6 +48,7 @@ interface OcrResult {
   confidence: number;
   imageUrl: string;
   ocrAvailable: boolean;
+  amountToken: string | null;
 }
 
 function ConfettiOverlay() {
@@ -243,116 +244,40 @@ export default function ScanPage() {
   }
 
   async function submitScan() {
-    const euros = parseFloat(amount.replace(',', '.'));
-    if (isNaN(euros) || euros <= 0) {
-      setAmountError('Entrez un montant valide (ex: 23,50)');
-      return;
-    }
-
-    // Plafond anti-fraude : recalculé à l'identique de l'UI
-    const ocrLocked =
-      ocrResult?.detectedAmount !== null &&
-      ocrResult?.detectedAmount !== undefined &&
-      (ocrResult?.confidence ?? 0) >= 0.92;
-    const maxAllowed = ocrLocked
-      ? (ocrResult!.detectedAmount ?? 150)
-      : ocrResult?.detectedAmount
-      ? Math.min(ocrResult.detectedAmount * 1.3, 200)
-      : 150;
-
-    if (euros > maxAllowed) {
-      setAmountError(`Montant invalide — maximum autorisé : ${maxAllowed.toFixed(2)} €`);
+    if (!ocrResult?.detectedAmount || !ocrResult?.amountToken) {
+      setSubmitError('Données OCR manquantes — reprenez la photo.');
       return;
     }
     setAmountError('');
     setSubmitError('');
     setStep('submitting');
 
-    // Vérifier si ce ticket a déjà été scanné — vérification globale (tous utilisateurs)
-    if (imageHash) {
-      const { data: dupHash } = await supabase
-        .from('receipts')
-        .select('id')
-        .eq('image_hash', imageHash)
-        .limit(1);
-      if (dupHash && dupHash.length > 0) {
-        setSubmitError('Ce ticket a déjà été utilisé.');
-        setStep('confirm');
-        return;
-      }
-    }
-    if (ocrResult?.storeName && ocrResult?.purchaseDate) {
-      const { data: dupMeta } = await supabase
-        .from('receipts')
-        .select('id')
-        .eq('store_name', ocrResult.storeName)
-        .eq('purchase_date', ocrResult.purchaseDate)
-        .eq('total_amount', euros)
-        .limit(1);
-      if (dupMeta && dupMeta.length > 0) {
-        setSubmitError('Ce ticket a déjà été utilisé.');
-        setStep('confirm');
-        return;
-      }
-    }
-
-    const multiplier = TIER_MULTIPLIER[contributor?.subscription_tier ?? 'free'];
-    const earned = Math.round(euros * POINTS_PER_EURO * multiplier);
-
-    // Stocker le ticket — l'index unique sur image_hash bloque automatiquement les doublons
-    const { error: insertErr } = await supabase.from('receipts').insert({
-      contributor_id: userId,
-      image_url: ocrResult?.imageUrl || 'manual',
-      store_name: ocrResult?.storeName ?? null,
-      total_amount: euros,
-      purchase_date: ocrResult?.purchaseDate ?? null,
-      points_earned: earned,
-      status: 'validated',
-      ocr_confidence: ocrResult?.confidence ?? null,
-      image_hash: imageHash || null,
+    const resp = await fetch('/api/submit-scan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        detectedAmount: ocrResult.detectedAmount,
+        amountToken: ocrResult.amountToken,
+        imageHash: imageHash || null,
+        imageUrl: ocrResult.imageUrl || null,
+        storeName: ocrResult.storeName ?? null,
+        purchaseDate: ocrResult.purchaseDate ?? null,
+        ocrConfidence: ocrResult.confidence ?? null,
+      }),
     });
 
-    if (insertErr) {
-      // Code 23505 = violation de contrainte unique (doublon)
-      if (insertErr.code === '23505') {
-        setSubmitError('Ce ticket a déjà été utilisé.');
-      } else {
-        setSubmitError(insertErr.message ?? 'Erreur lors de l\'enregistrement.');
-      }
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      setSubmitError(data.error ?? 'Erreur lors de la validation.');
       setStep('confirm');
       return;
     }
 
-    // Créditer les points
-    const { error: rpcErr } = await supabase.rpc('credit_points', {
-      p_profile_id: userId,
-      p_amount: earned,
-      p_type: 'earn_scan',
-      p_description: `Ticket ${ocrResult?.storeName ?? 'magasin'} — ${euros.toFixed(2)} €`,
-    });
-
-    if (rpcErr) {
-      setSubmitError(rpcErr.message ?? 'Erreur inconnue');
-      setStep('confirm');
-      return;
-    }
-
-    // Lire solde frais
-    const { data: fresh } = await supabase
-      .from('contributor_profiles')
-      .select('points_total, points_available')
-      .eq('profile_id', userId)
-      .single();
-
-    const newTotal = fresh?.points_total ?? 0;
-    const newAvailable = fresh?.points_available ?? 0;
-    const oldBaskets = contributor?.baskets_funded ?? 0;
-    const newBaskets = Math.floor(newTotal / 500);
-
-    await supabase
-      .from('contributor_profiles')
-      .update({ baskets_funded: newBaskets })
-      .eq('profile_id', userId);
+    const { earned, newAvailable, newBaskets, oldBaskets } = data;
 
     if (newBaskets > oldBaskets) {
       setNewBasketFunded(true);
