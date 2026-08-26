@@ -4,16 +4,24 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-webpush.setVapidDetails(
-  'mailto:contact@coop-panier.fr',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+// VAPID public key — public by design, safe to embed
+const VAPID_PUBLIC_KEY = 'BKEroJ7qdGYYlWzk65vym1X09F4OWS9eW173V-McNPN8QmfI8s6Am8bLLUnuxhOtLJ0ZAtyxhA-bE6jTJkSLNq8';
+
+let vapidConfigured = false;
+function ensureVapid() {
+  if (vapidConfigured) return;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!privateKey) return;
+  webpush.setVapidDetails('mailto:contact@coop-panier.fr', VAPID_PUBLIC_KEY, privateKey);
+  vapidConfigured = true;
+}
 
 export async function sendPushToUser(
   userId: string,
   payload: { title: string; body: string; url?: string }
 ) {
+  ensureVapid();
+  if (!vapidConfigured) return;
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const { data: subs } = await supabase
     .from('push_subscriptions')

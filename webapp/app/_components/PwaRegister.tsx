@@ -6,20 +6,14 @@ import { supabase } from '@/lib/supabase';
 // VAPID public key — intentionally public (embedded in browser JS by design)
 const VAPID_PUBLIC_KEY = 'BKEroJ7qdGYYlWzk65vym1X09F4OWS9eW173V-McNPN8QmfI8s6Am8bLLUnuxhOtLJ0ZAtyxhA-bE6jTJkSLNq8';
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = atob(base64);
-  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
-}
-
 async function subscribeToPush(registration: ServiceWorkerRegistration, token: string) {
   if (!VAPID_PUBLIC_KEY) return;
   try {
     const existing = await registration.pushManager.getSubscription();
+    // Browsers accept the VAPID public key as a base64url string directly
     const sub = existing ?? await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: VAPID_PUBLIC_KEY,
     });
 
     await fetch('/api/push/subscribe', {
