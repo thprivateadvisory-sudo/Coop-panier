@@ -311,6 +311,16 @@
     .waitlist-submit:hover { background: var(--green-dark); transform: translateY(-1px); }
     .waitlist-success { display: none; color: var(--green); font-weight: 500; font-size: 15px; margin-top: 16px; }
 
+    /* PARTENAIRES */
+    .section-partenaires { background: white; padding: 72px 40px; border-top: 1px solid var(--border); text-align: center; }
+    .partenaires-inner { max-width: 760px; margin: 0 auto; }
+    .partenaires-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 40px; }
+    .partenaires-grid { display: flex; justify-content: center; align-items: center; gap: 56px; flex-wrap: wrap; }
+    .partenaire-card { display: flex; flex-direction: column; align-items: center; gap: 14px; text-decoration: none; opacity: 0.6; transition: opacity .25s; }
+    .partenaire-card:hover { opacity: 1; }
+    .partenaire-logo { height: 64px; width: 64px; border-radius: 16px; object-fit: contain; }
+    .partenaire-name { font-size: 13px; font-weight: 500; color: var(--muted); font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.02em; }
+
     /* FOOTER */
     footer {
       background: #0f1f07; color: rgba(255,255,255,.55);
@@ -649,6 +659,19 @@
         <button class="waitlist-submit" type="submit">S'inscrire</button>
       </form>
       <div class="waitlist-success" id="waitlist-success">Vous êtes inscrit ! On vous prévient dès le lancement.</div>
+    </div>
+  </section>
+
+  <!-- PARTENAIRES -->
+  <section class="section-partenaires" id="partenaires">
+    <div class="partenaires-inner">
+      <p class="partenaires-label rv">Nos partenaires</p>
+      <div class="partenaires-grid rv">
+        <a class="partenaire-card" href="https://groupecohesif.ca" target="_blank" rel="noopener noreferrer">
+          <img class="partenaire-logo" src="groupe-cohesif-logo.png" alt="Groupe Cohésif">
+          <span class="partenaire-name">Groupe Cohésif</span>
+        </a>
+      </div>
     </div>
   </section>
 
