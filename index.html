@@ -417,15 +417,15 @@
         <div class="hero-stats">
           <div class="hero-stat">
             <span class="hero-stat-val" id="stat-tickets">—</span>
-            <span class="hero-stat-label">tickets scannés</span>
+            <span class="hero-stat-label" id="stat-tickets-label">tickets scannés</span>
           </div>
           <div class="hero-stat">
             <span class="hero-stat-val" id="stat-paniers">—</span>
-            <span class="hero-stat-label">paniers financés</span>
+            <span class="hero-stat-label" id="stat-paniers-label">paniers financés</span>
           </div>
           <div class="hero-stat">
             <span class="hero-stat-val" id="stat-familles">—</span>
-            <span class="hero-stat-label">familles aidées</span>
+            <span class="hero-stat-label" id="stat-familles-label">familles aidées</span>
           </div>
         </div>
       </div>
@@ -597,20 +597,20 @@
     <div class="impact-inner">
       <div class="impact-header rv">
         <div class="impact-tag">Impact</div>
-        <h2 class="impact-title">Des chiffres qui parlent.</h2>
+        <h2 class="impact-title" id="impact-title">Des chiffres qui parlent.</h2>
       </div>
       <div class="impact-grid">
         <div class="impact-card rv rv-delay-1">
           <div class="impact-val" id="imp-tickets">—</div>
-          <div class="impact-label">tickets de caisse scannés</div>
+          <div class="impact-label" id="imp-tickets-label">tickets de caisse scannés</div>
         </div>
         <div class="impact-card rv rv-delay-2">
           <div class="impact-val" id="imp-paniers">—</div>
-          <div class="impact-label">paniers alimentaires financés</div>
+          <div class="impact-label" id="imp-paniers-label">paniers alimentaires financés</div>
         </div>
         <div class="impact-card rv rv-delay-3">
           <div class="impact-val" id="imp-familles">—</div>
-          <div class="impact-label">familles accompagnées</div>
+          <div class="impact-label" id="imp-familles-label">familles accompagnées</div>
         </div>
       </div>
     </div>
@@ -744,13 +744,30 @@
       const tickets = s?.tickets_scanned ?? 0;
       const paniers = s?.baskets_funded ?? 0;
       const familles = s?.families_helped ?? 0;
+      const hasData = (tickets + paniers + familles) > 0;
 
-      document.getElementById('stat-tickets').textContent = fmt(tickets);
-      document.getElementById('stat-paniers').textContent = fmt(paniers);
-      document.getElementById('stat-familles').textContent = fmt(familles);
-      document.getElementById('imp-tickets').textContent = fmt(tickets);
-      document.getElementById('imp-paniers').textContent = fmt(paniers);
-      document.getElementById('imp-familles').textContent = fmt(familles);
+      if (hasData) {
+        document.getElementById('stat-tickets').textContent = fmt(tickets);
+        document.getElementById('stat-paniers').textContent = fmt(paniers);
+        document.getElementById('stat-familles').textContent = fmt(familles);
+        document.getElementById('imp-tickets').textContent = fmt(tickets);
+        document.getElementById('imp-paniers').textContent = fmt(paniers);
+        document.getElementById('imp-familles').textContent = fmt(familles);
+      } else {
+        document.getElementById('impact-title').textContent = 'Nos objectifs.';
+        document.getElementById('stat-tickets').textContent = '10k';
+        document.getElementById('stat-paniers').textContent = '1k';
+        document.getElementById('stat-familles').textContent = '500';
+        document.getElementById('stat-tickets-label').textContent = 'tickets · objectif';
+        document.getElementById('stat-paniers-label').textContent = 'paniers · objectif';
+        document.getElementById('stat-familles-label').textContent = 'familles · objectif';
+        document.getElementById('imp-tickets').textContent = '10 000';
+        document.getElementById('imp-paniers').textContent = '1 000';
+        document.getElementById('imp-familles').textContent = '500';
+        document.getElementById('imp-tickets-label').textContent = 'tickets de caisse à scanner';
+        document.getElementById('imp-paniers-label').textContent = 'paniers alimentaires à financer';
+        document.getElementById('imp-familles-label').textContent = 'familles à accompagner';
+      }
 
       // Waitlist count
       const wCount = waitlist?.[0]?.count ?? null;
