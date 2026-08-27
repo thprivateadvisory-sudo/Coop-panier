@@ -741,9 +741,9 @@
       ]);
 
       const s = stats?.[0];
-      const tickets = s?.tickets_scanned ?? 2300;
-      const paniers = s?.baskets_funded ?? 480;
-      const familles = s?.families_helped ?? 1200;
+      const tickets = s?.tickets_scanned ?? 0;
+      const paniers = s?.baskets_funded ?? 0;
+      const familles = s?.families_helped ?? 0;
 
       document.getElementById('stat-tickets').textContent = fmt(tickets);
       document.getElementById('stat-paniers').textContent = fmt(paniers);
