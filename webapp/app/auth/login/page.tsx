@@ -51,18 +51,19 @@ function LoginContent() {
           setLoading(false);
           return;
         }
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName, role } },
+        // Route serveur avec API admin → pas de rate limit email Supabase
+        const resp = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, fullName, role }),
         });
-        if (error) throw error;
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error ?? 'Erreur lors de la création du compte.');
 
-        if (data.session) {
-          window.location.href = '/auth/setup';
-        } else if (data.user) {
-          setInfo('Un email de confirmation a été envoyé à ' + email + '. Cliquez sur le lien pour activer votre compte.');
-        }
+        // Connexion automatique — le compte est déjà confirmé
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+        window.location.href = '/auth/setup';
 
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
