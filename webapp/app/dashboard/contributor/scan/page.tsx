@@ -637,7 +637,8 @@ export default function ScanPage() {
       <div className="pb-12 px-6 flex items-center justify-center gap-10 z-10">
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center"
+          disabled={!userLoaded}
+          className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center disabled:opacity-40"
           aria-label="Importer depuis la galerie"
         >
           <span className="text-2xl">🖼️</span>

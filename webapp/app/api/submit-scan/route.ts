@@ -35,6 +35,11 @@ function verifyAmountToken(amount: number, userId: string, token: string): boole
 }
 
 export async function POST(req: NextRequest) {
+  if (!SUPABASE_SERVICE_KEY) {
+    console.error('[submit-scan] SUPABASE_SERVICE_ROLE_KEY manquant');
+    return NextResponse.json({ error: 'Configuration serveur incomplète — contactez le support.' }, { status: 500 });
+  }
+
   try {
     const authHeader = req.headers.get('authorization') ?? '';
     const token = authHeader.replace('Bearer ', '');
