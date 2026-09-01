@@ -224,17 +224,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.fond },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.lg, backgroundColor: colors.fond },
 
-  permText: { fontFamily: 'Inter', fontSize: 15, color: colors.grisMoyen, textAlign: 'center' },
+  permText: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.grisMoyen, textAlign: 'center' },
   permBtn: { backgroundColor: colors.vert, borderRadius: radius.md, paddingVertical: 14, paddingHorizontal: spacing.xl },
-  permBtnText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 15, color: colors.blanc },
-  processingText: { fontFamily: 'Inter', fontSize: 15, color: colors.grisMoyen, marginTop: spacing.md },
+  permBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15, color: colors.blanc },
+  processingText: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.grisMoyen, marginTop: spacing.md },
 
   // Caméra
   cameraContainer: { flex: 1, backgroundColor: '#000' },
   camera: { flex: 1 },
   cameraOverlay: { flex: 1, justifyContent: 'space-between', padding: spacing.xl },
   backBtn: { alignSelf: 'flex-start' },
-  backBtnText: { fontFamily: 'Nunito', fontWeight: '700', fontSize: 16, color: colors.blanc },
+  backBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: colors.blanc },
 
   frameWrapper: { alignItems: 'center', gap: spacing.xl },
   frame: {
@@ -253,14 +253,14 @@ const styles = StyleSheet.create({
   cornerTR: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
   cornerBL: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
   cornerBR: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
-  frameHint: { fontFamily: 'Inter', fontSize: 14, color: colors.blanc, textAlign: 'center' },
+  frameHint: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.blanc, textAlign: 'center' },
 
   bottomHint: {
     backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: radius.md,
     padding: spacing.md,
   },
-  bottomHintText: { fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center' },
+  bottomHintText: { fontFamily: 'Inter_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center' },
 
   // Résultat
   resultContainer: {
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   successEmoji: { fontSize: 40 },
-  resultTitle: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 26, color: colors.gris },
+  resultTitle: { fontFamily: 'Nunito_900Black', fontSize: 26, color: colors.gris },
   beneCard: {
     width: '100%',
     backgroundColor: colors.blanc,
@@ -290,8 +290,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  beneName: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 22, color: colors.gris },
-  beneStats: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen },
+  beneName: { fontFamily: 'Nunito_900Black', fontSize: 22, color: colors.gris },
+  beneStats: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
   confirmBtn: {
     width: '100%',
     backgroundColor: colors.vert,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  confirmBtnText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 16, color: colors.blanc },
+  confirmBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.blanc },
   cancelBtn: { paddingVertical: spacing.sm },
-  cancelBtnText: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen },
+  cancelBtnText: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
 });
