@@ -32,6 +32,24 @@ export function ProfileScreen({ navigation }: Props) {
   const [city, setCity] = useState(profile?.city ?? '');
   const [saving, setSaving] = useState(false);
 
+  async function handleChangePassword() {
+    if (!profile?.email) return;
+    Alert.alert(
+      'Réinitialiser le mot de passe',
+      `Un email de réinitialisation sera envoyé à ${profile.email}.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Envoyer',
+          onPress: async () => {
+            await supabase.auth.resetPasswordForEmail(profile.email);
+            Alert.alert('Email envoyé', 'Vérifiez votre boîte mail.');
+          },
+        },
+      ]
+    );
+  }
+
   const tier = contributor?.subscription_tier ?? 'free';
   const subStyle = SUBSCRIPTION_LABELS[tier];
   const initials = (profile?.full_name ?? '?')
@@ -68,7 +86,7 @@ export function ProfileScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* En-tête */}
@@ -130,7 +148,7 @@ export function ProfileScreen({ navigation }: Props) {
 
         {/* Abonnement */}
         <View style={[styles.subCard, { borderColor: subStyle.color, backgroundColor: subStyle.bg }]}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.subLabel}>Abonnement actuel</Text>
             <Text style={[styles.subTier, { color: subStyle.color }]}>{subStyle.label}</Text>
             {contributor?.subscription_expires_at && (
@@ -145,7 +163,9 @@ export function ProfileScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('Subscriptions')}
               activeOpacity={0.85}
             >
-              <Text style={styles.upgradeBtnText}>Passer à l'Essentiel</Text>
+              <Text style={styles.upgradeBtnText} numberOfLines={2} adjustsFontSizeToFit>
+                Passer à l'Essentiel
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -163,7 +183,7 @@ export function ProfileScreen({ navigation }: Props) {
           <MenuItem emoji="🔔" label="Notifications" onPress={() => {}} />
           <MenuItem emoji="🔒" label="Changer le mot de passe" onPress={handleChangePassword} />
           <MenuItem emoji="🤝" label="Parrainer un ami" onPress={() => {}} />
-          <MenuItem emoji="📄" label="Mentions légales" onPress={() => {}} />
+          <MenuItem emoji="📄" label="Mentions légales" onPress={() => {}} isLast />
         </View>
 
         {/* Déconnexion */}
@@ -176,23 +196,6 @@ export function ProfileScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 
-  async function handleChangePassword() {
-    if (!profile?.email) return;
-    Alert.alert(
-      'Réinitialiser le mot de passe',
-      `Un email de réinitialisation sera envoyé à ${profile.email}.`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Envoyer',
-          onPress: async () => {
-            await supabase.auth.resetPasswordForEmail(profile.email);
-            Alert.alert('Email envoyé', 'Vérifiez votre boîte mail.');
-          },
-        },
-      ]
-    );
-  }
 }
 
 function StatBox({ value, label }: { value: number; label: string }) {
@@ -204,9 +207,13 @@ function StatBox({ value, label }: { value: number; label: string }) {
   );
 }
 
-function MenuItem({ emoji, label, onPress }: { emoji: string; label: string; onPress: () => void }) {
+function MenuItem({ emoji, label, onPress, isLast }: { emoji: string; label: string; onPress: () => void; isLast?: boolean }) {
   return (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.menuItem, isLast && styles.menuItemLast]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.menuEmoji}>{emoji}</Text>
       <Text style={styles.menuLabel}>{label}</Text>
       <Text style={styles.menuArrow}>›</Text>
@@ -250,7 +257,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
     color: colors.gris,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   editActions: { alignItems: 'center', gap: spacing.sm },
   editBtn: {
@@ -320,6 +327,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.bordure,
   },
+  menuItemLast: { borderBottomWidth: 0 },
   menuEmoji: { fontSize: 20 },
   menuLabel: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.gris },
   menuArrow: { fontSize: 20, color: colors.grisClair },

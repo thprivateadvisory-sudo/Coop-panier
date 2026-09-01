@@ -223,7 +223,7 @@ function ResultRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.fond },
-  scroll: { padding: spacing.xl, gap: spacing.lg },
+  scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.xxl },
 
   backBtn: { marginBottom: spacing.sm },
   backText: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.vert },
