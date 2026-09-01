@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
@@ -105,8 +105,16 @@ function AssociationApp() {
   );
 }
 
+const OnboardingScreens = () => (
+  <>
+    <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+    <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
+    <Stack.Screen name="AuthStack" component={AuthScreen} />
+  </>
+);
+
 export function Navigation() {
-  const { session, profile, setSession, setProfile } = useAuthStore();
+  const { session, profile, setSession, setProfile, loading } = useAuthStore();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -122,7 +130,12 @@ export function Navigation() {
             .select('*')
             .eq('id', session.user.id)
             .single();
-          setProfile(data);
+          if (!data) {
+            // Session orpheline sans profil — déconnecter
+            await supabase.auth.signOut();
+          } else {
+            setProfile(data);
+          }
         } else {
           setProfile(null);
         }
@@ -132,15 +145,15 @@ export function Navigation() {
     return () => subscription.unsubscribe();
   }, []);
 
+  if (loading) {
+    return <View style={{ flex: 1, backgroundColor: colors.blanc }} />;
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!session ? (
-          <>
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-            <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
-            <Stack.Screen name="AuthStack" component={AuthScreen} />
-          </>
+          <OnboardingScreens />
         ) : profile?.role === 'contributor' ? (
           <Stack.Screen name="ContributorApp" component={ContributorTabs} />
         ) : profile?.role === 'beneficiary' ? (
@@ -148,7 +161,8 @@ export function Navigation() {
         ) : profile?.role === 'association' ? (
           <Stack.Screen name="AssociationApp" component={AssociationApp} />
         ) : (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          // session présente mais profil pas encore chargé → onboarding complet accessible
+          <OnboardingScreens />
         )}
       </Stack.Navigator>
     </NavigationContainer>
