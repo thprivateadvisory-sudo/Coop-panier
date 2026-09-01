@@ -117,27 +117,30 @@ export function Navigation() {
   const { session, profile, setSession, setProfile, loading } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => setSession(session))
+      .catch(() => setSession(null));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        if (session) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (!data) {
-            // Session orpheline sans profil — déconnecter
-            await supabase.auth.signOut();
+        try {
+          setSession(session);
+          if (session) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            if (!data) {
+              await supabase.auth.signOut();
+            } else {
+              setProfile(data);
+            }
           } else {
-            setProfile(data);
+            setProfile(null);
           }
-        } else {
-          setProfile(null);
+        } catch {
+          setSession(null);
         }
       }
     );

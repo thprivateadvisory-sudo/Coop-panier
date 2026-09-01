@@ -11,6 +11,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  update:
+    name: OTA Update (instant)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish OTA update
+        working-directory: mobile
+        run: eas update --channel production --message "${{ github.event.head_commit.message }}" --non-interactive
+
   build:
     name: Build Android (Play Store)
     runs-on: ubuntu-latest

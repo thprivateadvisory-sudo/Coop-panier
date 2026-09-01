@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, Component, ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet } from 'react-native';
 import { Navigation } from '@/navigation';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -19,6 +20,28 @@ import {
 } from '@expo-google-fonts/inter';
 
 SplashScreen.preventAutoHideAsync();
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={eb.container}>
+          <Text style={eb.title}>Une erreur est survenue</Text>
+          <Text style={eb.msg}>Veuillez relancer l'application.</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const eb = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#fff' },
+  title: { fontSize: 18, fontWeight: '700', color: '#2D5016', marginBottom: 8 },
+  msg: { fontSize: 14, color: '#666', textAlign: 'center' },
+});
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -44,9 +67,11 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider onLayout={onLayoutRootView}>
-      <StatusBar style="auto" />
-      <Navigation />
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider onLayout={onLayoutRootView}>
+        <StatusBar style="auto" />
+        <Navigation />
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
