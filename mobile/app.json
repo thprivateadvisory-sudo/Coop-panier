@@ -32,7 +32,7 @@
       },
       "package": "fr.cooppanier.app",
       "versionCode": 6,
-      "compileSdkVersion": 36,
+      "compileSdkVersion": 35,
       "targetSdkVersion": 36,
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
