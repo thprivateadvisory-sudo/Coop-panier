@@ -13,16 +13,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
+import { useContributorProfile } from '@/hooks/useContributorProfile';
+
+const SUBSCRIPTION_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  free: { label: 'Gratuit', color: colors.grisMoyen, bg: colors.fond },
+  essentiel: { label: 'Essentiel', color: colors.vert, bg: colors.vertPale },
+  engagement: { label: 'Engagement', color: colors.orange, bg: colors.orangePale },
+};
 
 type Props = { navigation: any };
 
 export function ProfileScreen({ navigation }: Props) {
   const { profile, setProfile, signOut } = useAuthStore();
+  const contributor = useContributorProfile(profile?.id ?? '');
 
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
   const [city, setCity] = useState(profile?.city ?? '');
   const [saving, setSaving] = useState(false);
+
+  const tier = String(contributor?.subscription_tier ?? 'free');
+  const subStyle = SUBSCRIPTION_LABELS[tier] ?? SUBSCRIPTION_LABELS.free;
 
   const rawName = profile?.full_name ?? '';
   const initials =
@@ -84,6 +95,10 @@ export function ProfileScreen({ navigation }: Props) {
         },
       ]
     );
+  }
+
+  function handleComingSoon(feature: string) {
+    Alert.alert(feature, 'Cette fonctionnalité sera bientôt disponible.');
   }
 
   return (
@@ -151,13 +166,43 @@ export function ProfileScreen({ navigation }: Props) {
           )}
         </View>
 
+        {/* Abonnement */}
+        <View style={[styles.subCard, { borderColor: subStyle.color, backgroundColor: subStyle.bg }]}>
+          <View style={styles.subInfo}>
+            <Text style={styles.subLabel}>Abonnement actuel</Text>
+            <Text style={[styles.subTier, { color: subStyle.color }]}>{subStyle.label}</Text>
+            {!!contributor?.subscription_expires_at && (
+              <Text style={styles.subExpiry}>
+                Expire le{' '}
+                {new Date(contributor.subscription_expires_at).toLocaleDateString('fr-FR')}
+              </Text>
+            )}
+          </View>
+          {tier === 'free' && (
+            <TouchableOpacity
+              style={styles.upgradeBtn}
+              onPress={() => navigation.navigate('Subscriptions')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.upgradeBtnText}>Passer à{'\n'}l'Essentiel</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <StatBox value={contributor?.points_total ?? 0} label="Points cumulés" />
+          <StatBox value={contributor?.tickets_scanned ?? 0} label="Tickets scannés" />
+          <StatBox value={contributor?.baskets_funded ?? 0} label="Paniers financés" />
+        </View>
+
         {/* Menu */}
         <View style={styles.menu}>
-          <MenuItem emoji="📋" label="Historique des transactions" onPress={() => {}} />
-          <MenuItem emoji="🔔" label="Notifications" onPress={() => {}} />
+          <MenuItem emoji="📋" label="Historique des transactions" onPress={() => handleComingSoon('Historique')} />
+          <MenuItem emoji="🔔" label="Notifications" onPress={() => handleComingSoon('Notifications')} />
           <MenuItem emoji="🔒" label="Changer le mot de passe" onPress={handleChangePassword} />
-          <MenuItem emoji="🤝" label="Parrainer un ami" onPress={() => {}} />
-          <MenuItem emoji="📄" label="Mentions légales" onPress={() => {}} isLast />
+          <MenuItem emoji="🤝" label="Parrainer un ami" onPress={() => handleComingSoon('Parrainage')} />
+          <MenuItem emoji="📄" label="Mentions légales" onPress={() => handleComingSoon('Mentions légales')} isLast />
         </View>
 
         {/* Déconnexion */}
@@ -168,6 +213,15 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.version}>Coop'Panier v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function StatBox({ value, label }: { value: number; label: string }) {
+  return (
+    <View style={styles.statBox}>
+      <Text style={styles.statValue}>{value.toLocaleString('fr-FR')}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
   );
 }
 
@@ -252,6 +306,51 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 14, color: colors.blanc },
   cancelText: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
+
+  subCard: {
+    borderWidth: 2,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  subInfo: { flex: 1 },
+  subLabel: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.grisMoyen, marginBottom: 2 },
+  subTier: { fontFamily: 'Nunito_900Black', fontSize: 20 },
+  subExpiry: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisMoyen, marginTop: 2 },
+  upgradeBtn: {
+    backgroundColor: colors.vert,
+    borderRadius: radius.md,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+  },
+  upgradeBtnText: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 13,
+    color: colors.blanc,
+    textAlign: 'center',
+  },
+
+  statsRow: { flexDirection: 'row', gap: spacing.sm },
+  statBox: {
+    flex: 1,
+    backgroundColor: colors.blanc,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.bordure,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: { fontFamily: 'Nunito_900Black', fontSize: 20, color: colors.vert },
+  statLabel: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 10,
+    color: colors.grisMoyen,
+    textAlign: 'center',
+  },
 
   menu: {
     backgroundColor: colors.blanc,
