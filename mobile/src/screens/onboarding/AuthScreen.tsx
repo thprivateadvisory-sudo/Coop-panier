@@ -68,17 +68,27 @@ export function AuthScreen({ route, navigation }: Props) {
   }
 
   async function handleSignUp() {
-    // If already authenticated (email confirmed but no profile yet), reuse session
-    const { data: sessionData } = await supabase.auth.getSession();
     let userId: string;
+    let hasActiveSession = false;
 
+    // 1. Check for existing session (e.g. email already confirmed in browser)
+    const { data: sessionData } = await supabase.auth.getSession();
     if (sessionData?.session?.user) {
       userId = sessionData.session.user.id;
+      hasActiveSession = true;
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) { Alert.alert('Erreur', error.message); return; }
-      if (!data.user) return;
-      userId = data.user.id;
+      // 2. Try signing in — if email already confirmed, this gives us the real UUID
+      const { data: signInData } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInData?.session?.user) {
+        userId = signInData.session.user.id;
+        hasActiveSession = true;
+      } else {
+        // 3. Truly new user — create auth account
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) { Alert.alert('Erreur', error.message); return; }
+        if (!data.user) return;
+        userId = data.user.id;
+      }
     }
 
     const { error: profileError } = await supabase.rpc('create_user_profile', {
@@ -90,8 +100,8 @@ export function AuthScreen({ route, navigation }: Props) {
     });
     if (profileError) { Alert.alert('Erreur', profileError.message); return; }
 
-    // If already had a session, fetch and apply profile immediately (no re-login needed)
-    if (sessionData?.session?.user) {
+    // If already signed in, fetch profile and navigate immediately
+    if (hasActiveSession) {
       const { data: profileData } = await supabase
         .from('profiles').select('*').eq('id', userId).single();
       if (profileData) { setProfile(profileData); return; }
