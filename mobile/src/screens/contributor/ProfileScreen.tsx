@@ -15,7 +15,7 @@ import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { useContributorProfile } from '@/hooks/useContributorProfile';
 
-const SUBSCRIPTION_LABELS = {
+const SUBSCRIPTION_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   free: { label: 'Gratuit', color: colors.grisMoyen, bg: colors.fond },
   essentiel: { label: 'Essentiel', color: colors.vert, bg: colors.vertPale },
   engagement: { label: 'Engagement', color: colors.orange, bg: colors.orangePale },
@@ -32,55 +32,66 @@ export function ProfileScreen({ navigation }: Props) {
   const [city, setCity] = useState(profile?.city ?? '');
   const [saving, setSaving] = useState(false);
 
+  const tier = String(contributor?.subscription_tier ?? 'free');
+  const subStyle = SUBSCRIPTION_LABELS[tier] ?? SUBSCRIPTION_LABELS.free;
+
+  const rawName = profile?.full_name ?? '';
+  const initials = rawName
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w[0] ?? '')
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || '?';
+
+  async function handleSave() {
+    if (!fullName.trim()) {
+      Alert.alert('Erreur', 'Le nom ne peut pas être vide.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName.trim(), city: city.trim() })
+        .eq('id', profile!.id)
+        .select()
+        .single();
+      if (error) {
+        Alert.alert('Erreur', error.message);
+      } else if (data) {
+        setProfile(data);
+        setEditing(false);
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de sauvegarder.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleSignOut() {
+    Alert.alert('Se déconnecter', 'Vous allez quitter votre compte.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Déconnecter', style: 'destructive', onPress: signOut },
+    ]);
+  }
+
   async function handleChangePassword() {
-    if (!profile?.email) return;
+    const email = profile?.email;
+    if (!email) return;
     Alert.alert(
       'Réinitialiser le mot de passe',
-      `Un email de réinitialisation sera envoyé à ${profile.email}.`,
+      `Un email de réinitialisation sera envoyé à ${email}.`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Envoyer',
           onPress: async () => {
-            await supabase.auth.resetPasswordForEmail(profile.email);
+            await supabase.auth.resetPasswordForEmail(email);
             Alert.alert('Email envoyé', 'Vérifiez votre boîte mail.');
           },
         },
-      ]
-    );
-  }
-
-  const tier = (contributor?.subscription_tier ?? 'free') as keyof typeof SUBSCRIPTION_LABELS;
-  const subStyle = SUBSCRIPTION_LABELS[tier] ?? SUBSCRIPTION_LABELS.free;
-  const initials = (profile?.full_name ?? '?')
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-  async function handleSave() {
-    if (!fullName.trim()) { Alert.alert('Erreur', 'Le nom ne peut pas être vide.'); return; }
-    setSaving(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName.trim(), city: city.trim() })
-      .eq('id', profile!.id)
-      .select()
-      .single();
-    setSaving(false);
-    if (error) { Alert.alert('Erreur', error.message); return; }
-    setProfile(data);
-    setEditing(false);
-  }
-
-  function handleSignOut() {
-    Alert.alert(
-      'Se déconnecter',
-      'Vous allez quitter votre compte.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnecter', style: 'destructive', onPress: signOut },
       ]
     );
   }
@@ -97,9 +108,11 @@ export function ProfileScreen({ navigation }: Props) {
 
           {!editing ? (
             <View style={styles.nameBlock}>
-              <Text style={styles.name}>{profile?.full_name}</Text>
-              <Text style={styles.email}>{profile?.email}</Text>
-              {profile?.city ? <Text style={styles.city}>📍 {profile.city}</Text> : null}
+              <Text style={styles.name}>{profile?.full_name ?? ''}</Text>
+              <Text style={styles.email}>{profile?.email ?? ''}</Text>
+              {!!profile?.city && (
+                <Text style={styles.city}>📍 {profile.city}</Text>
+              )}
             </View>
           ) : (
             <View style={styles.editBlock}>
@@ -128,18 +141,20 @@ export function ProfileScreen({ navigation }: Props) {
             </TouchableOpacity>
           ) : (
             <View style={styles.editActions}>
-              <TouchableOpacity
-                style={styles.saveBtn}
-                onPress={handleSave}
-                disabled={saving}
-              >
+              <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
                 {saving ? (
                   <ActivityIndicator color={colors.blanc} size="small" />
                 ) : (
                   <Text style={styles.saveBtnText}>Enregistrer</Text>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setEditing(false); setFullName(profile?.full_name ?? ''); setCity(profile?.city ?? ''); }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setEditing(false);
+                  setFullName(profile?.full_name ?? '');
+                  setCity(profile?.city ?? '');
+                }}
+              >
                 <Text style={styles.cancelText}>Annuler</Text>
               </TouchableOpacity>
             </View>
@@ -148,24 +163,23 @@ export function ProfileScreen({ navigation }: Props) {
 
         {/* Abonnement */}
         <View style={[styles.subCard, { borderColor: subStyle.color, backgroundColor: subStyle.bg }]}>
-          <View style={{ flex: 1 }}>
+          <View style={styles.subInfo}>
             <Text style={styles.subLabel}>Abonnement actuel</Text>
             <Text style={[styles.subTier, { color: subStyle.color }]}>{subStyle.label}</Text>
-            {contributor?.subscription_expires_at && (
+            {!!contributor?.subscription_expires_at && (
               <Text style={styles.subExpiry}>
-                Expire le {new Date(contributor.subscription_expires_at).toLocaleDateString('fr-FR')}
+                Expire le{' '}
+                {new Date(contributor.subscription_expires_at).toLocaleDateString('fr-FR')}
               </Text>
             )}
           </View>
           {tier === 'free' && (
             <TouchableOpacity
-              style={[styles.upgradeBtn, { backgroundColor: colors.vert }]}
+              style={styles.upgradeBtn}
               onPress={() => navigation.navigate('Subscriptions')}
               activeOpacity={0.85}
             >
-              <Text style={styles.upgradeBtnText} numberOfLines={2} adjustsFontSizeToFit>
-                Passer à l'Essentiel
-              </Text>
+              <Text style={styles.upgradeBtnText}>Passer à{'\n'}l'Essentiel</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -195,7 +209,6 @@ export function ProfileScreen({ navigation }: Props) {
       </ScrollView>
     </SafeAreaView>
   );
-
 }
 
 function StatBox({ value, label }: { value: number; label: string }) {
@@ -207,7 +220,17 @@ function StatBox({ value, label }: { value: number; label: string }) {
   );
 }
 
-function MenuItem({ emoji, label, onPress, isLast }: { emoji: string; label: string; onPress: () => void; isLast?: boolean }) {
+function MenuItem({
+  emoji,
+  label,
+  onPress,
+  isLast,
+}: {
+  emoji: string;
+  label: string;
+  onPress: () => void;
+  isLast?: boolean;
+}) {
   return (
     <TouchableOpacity
       style={[styles.menuItem, isLast && styles.menuItemLast]}
@@ -285,18 +308,25 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: spacing.md,
   },
+  subInfo: { flex: 1 },
   subLabel: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.grisMoyen, marginBottom: 2 },
   subTier: { fontFamily: 'Nunito_900Black', fontSize: 20 },
   subExpiry: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisMoyen, marginTop: 2 },
   upgradeBtn: {
+    backgroundColor: colors.vert,
     borderRadius: radius.md,
     paddingVertical: 8,
     paddingHorizontal: spacing.md,
+    alignItems: 'center',
   },
-  upgradeBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 13, color: colors.blanc },
+  upgradeBtnText: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 13,
+    color: colors.blanc,
+    textAlign: 'center',
+  },
 
   statsRow: { flexDirection: 'row', gap: spacing.sm },
   statBox: {
@@ -310,7 +340,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statValue: { fontFamily: 'Nunito_900Black', fontSize: 20, color: colors.vert },
-  statLabel: { fontFamily: 'Inter_400Regular', fontSize: 10, color: colors.grisMoyen, textAlign: 'center' },
+  statLabel: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 10,
+    color: colors.grisMoyen,
+    textAlign: 'center',
+  },
 
   menu: {
     backgroundColor: colors.blanc,
@@ -334,12 +369,12 @@ const styles = StyleSheet.create({
 
   signOutBtn: {
     borderWidth: 1.5,
-    borderColor: colors.error,
+    borderColor: '#E74C3C',
     borderRadius: radius.md,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  signOutText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15, color: colors.error },
+  signOutText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15, color: '#E74C3C' },
 
   version: {
     fontFamily: 'Inter_400Regular',
