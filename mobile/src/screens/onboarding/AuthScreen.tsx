@@ -70,32 +70,14 @@ export function AuthScreen({ route, navigation }: Props) {
     if (error) { Alert.alert('Erreur', error.message); return; }
     if (!data.user) return;
 
-    // Créer le profil
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      email,
-      full_name: fullName,
-      role,
+    const { error: profileError } = await supabase.rpc('create_user_profile', {
+      p_user_id: data.user.id,
+      p_email: email,
+      p_full_name: fullName,
+      p_role: role,
+      p_referral_code: referralCode.trim() || null,
     });
     if (profileError) { Alert.alert('Erreur', profileError.message); return; }
-
-    // Créer le sous-profil selon le rôle
-    if (role === 'contributor') {
-      await supabase.from('contributor_profiles').insert({
-        profile_id: data.user.id,
-        ...(referralCode.trim() ? { referred_by: referralCode.trim().toUpperCase() } : {}),
-      });
-    } else if (role === 'beneficiary') {
-      await supabase.from('beneficiary_profiles').insert({ profile_id: data.user.id });
-    } else if (role === 'association') {
-      await supabase.from('association_profiles').insert({
-        profile_id: data.user.id,
-        association_name: fullName,
-        address: '',
-        city: '',
-        postal_code: '',
-      });
-    }
 
     Alert.alert(
       'Compte créé !',
