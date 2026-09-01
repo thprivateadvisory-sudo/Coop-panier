@@ -21,15 +21,15 @@ import {
 
 SplashScreen.preventAutoHideAsync();
 
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: string }> {
-  state = { hasError: false, error: '' };
-  static getDerivedStateFromError(e: Error) { return { hasError: true, error: e?.message ?? String(e) }; }
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
   render() {
     if (this.state.hasError) {
       return (
         <View style={eb.container}>
-          <Text style={eb.title}>Erreur de démarrage</Text>
-          <Text style={eb.msg}>{this.state.error}</Text>
+          <Text style={eb.title}>Une erreur est survenue</Text>
+          <Text style={eb.msg}>Veuillez relancer l'application.</Text>
         </View>
       );
     }

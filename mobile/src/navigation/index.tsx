@@ -105,14 +105,6 @@ function AssociationApp() {
   );
 }
 
-const OnboardingScreens = () => (
-  <>
-    <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-    <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
-    <Stack.Screen name="AuthStack" component={AuthScreen} />
-  </>
-);
-
 export function Navigation() {
   const { session, profile, setSession, setProfile, loading } = useAuthStore();
 
@@ -155,17 +147,18 @@ export function Navigation() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!session ? (
-          <OnboardingScreens />
-        ) : profile?.role === 'contributor' ? (
+        {!session || !profile?.role ? (
+          <>
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
+            <Stack.Screen name="AuthStack" component={AuthScreen} />
+          </>
+        ) : profile.role === 'contributor' ? (
           <Stack.Screen name="ContributorApp" component={ContributorTabs} />
-        ) : profile?.role === 'beneficiary' ? (
+        ) : profile.role === 'beneficiary' ? (
           <Stack.Screen name="BeneficiaryApp" component={BeneficiaryTabs} />
-        ) : profile?.role === 'association' ? (
-          <Stack.Screen name="AssociationApp" component={AssociationApp} />
         ) : (
-          // session présente mais profil pas encore chargé → onboarding complet accessible
-          <OnboardingScreens />
+          <Stack.Screen name="AssociationApp" component={AssociationApp} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
