@@ -37,7 +37,9 @@ jobs:
 
       - name: Publish OTA update
         working-directory: mobile
-        run: eas update --channel production --message "${{ github.event.head_commit.message }}" --non-interactive
+        run: |
+          MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
+          eas update --channel production --message "$MSG" --non-interactive
 
   build:
     name: Build Android (Play Store)
