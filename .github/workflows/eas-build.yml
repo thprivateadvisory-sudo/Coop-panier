@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - claude/app-limit-september-first-4nfdeq
     paths:
       - 'mobile/**'
   workflow_dispatch:
