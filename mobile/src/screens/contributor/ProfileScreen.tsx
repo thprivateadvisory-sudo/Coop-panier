@@ -50,8 +50,8 @@ export function ProfileScreen({ navigation }: Props) {
     );
   }
 
-  const tier = contributor?.subscription_tier ?? 'free';
-  const subStyle = SUBSCRIPTION_LABELS[tier];
+  const tier = (contributor?.subscription_tier ?? 'free') as keyof typeof SUBSCRIPTION_LABELS;
+  const subStyle = SUBSCRIPTION_LABELS[tier] ?? SUBSCRIPTION_LABELS.free;
   const initials = (profile?.full_name ?? '?')
     .split(' ')
     .map((w) => w[0])
