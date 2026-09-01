@@ -235,11 +235,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 26, color: colors.blanc },
+  avatarText: { fontFamily: 'Nunito_900Black', fontSize: 26, color: colors.blanc },
   nameBlock: { alignItems: 'center', gap: 4 },
-  name: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 20, color: colors.gris },
-  email: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen },
-  city: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
+  name: { fontFamily: 'Nunito_800ExtraBold', fontSize: 20, color: colors.gris },
+  email: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen },
+  city: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
 
   editBlock: { width: '100%', gap: spacing.sm },
   editInput: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     borderColor: colors.bordure,
     borderRadius: radius.md,
     padding: spacing.md,
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 15,
     color: colors.gris,
     textAlign: 'center',
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: spacing.lg,
   },
-  editBtnText: { fontFamily: 'Nunito', fontWeight: '700', fontSize: 14, color: colors.gris },
+  editBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: colors.gris },
   saveBtn: {
     backgroundColor: colors.vert,
     borderRadius: radius.md,
@@ -269,8 +269,8 @@ const styles = StyleSheet.create({
     minWidth: 140,
     alignItems: 'center',
   },
-  saveBtnText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 14, color: colors.blanc },
-  cancelText: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen },
+  saveBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 14, color: colors.blanc },
+  cancelText: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
 
   subCard: {
     borderWidth: 2,
@@ -281,15 +281,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  subLabel: { fontFamily: 'Inter', fontSize: 12, color: colors.grisMoyen, marginBottom: 2 },
-  subTier: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 20 },
-  subExpiry: { fontFamily: 'Inter', fontSize: 11, color: colors.grisMoyen, marginTop: 2 },
+  subLabel: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.grisMoyen, marginBottom: 2 },
+  subTier: { fontFamily: 'Nunito_900Black', fontSize: 20 },
+  subExpiry: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisMoyen, marginTop: 2 },
   upgradeBtn: {
     borderRadius: radius.md,
     paddingVertical: 8,
     paddingHorizontal: spacing.md,
   },
-  upgradeBtnText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 13, color: colors.blanc },
+  upgradeBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 13, color: colors.blanc },
 
   statsRow: { flexDirection: 'row', gap: spacing.sm },
   statBox: {
@@ -302,8 +302,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  statValue: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 20, color: colors.vert },
-  statLabel: { fontFamily: 'Inter', fontSize: 10, color: colors.grisMoyen, textAlign: 'center' },
+  statValue: { fontFamily: 'Nunito_900Black', fontSize: 20, color: colors.vert },
+  statLabel: { fontFamily: 'Inter_400Regular', fontSize: 10, color: colors.grisMoyen, textAlign: 'center' },
 
   menu: {
     backgroundColor: colors.blanc,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.bordure,
   },
   menuEmoji: { fontSize: 20 },
-  menuLabel: { flex: 1, fontFamily: 'Inter', fontSize: 14, color: colors.gris },
+  menuLabel: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.gris },
   menuArrow: { fontSize: 20, color: colors.grisClair },
 
   signOutBtn: {
@@ -331,10 +331,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  signOutText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 15, color: colors.error },
+  signOutText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15, color: colors.error },
 
   version: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 11,
     color: colors.grisClair,
     textAlign: 'center',

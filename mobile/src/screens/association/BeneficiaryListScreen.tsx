@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     paddingBottom: spacing.sm,
   },
-  back: { fontFamily: 'Inter', fontSize: 15, color: colors.vert },
-  title: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 18, color: colors.gris },
+  back: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.vert },
+  title: { fontFamily: 'Nunito_800ExtraBold', fontSize: 18, color: colors.gris },
 
   searchWrap: { paddingHorizontal: spacing.xl, paddingBottom: spacing.sm },
   search: {
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     borderColor: colors.bordure,
     borderRadius: radius.md,
     padding: spacing.md,
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 14,
     color: colors.gris,
     backgroundColor: colors.blanc,
@@ -206,8 +206,8 @@ const styles = StyleSheet.create({
 
   summary: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingBottom: spacing.md },
   summaryChip: { flex: 1, borderRadius: radius.md, padding: spacing.sm, alignItems: 'center' },
-  summaryCount: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 18 },
-  summaryLabel: { fontFamily: 'Inter', fontSize: 10, textAlign: 'center' },
+  summaryCount: { fontFamily: 'Nunito_900Black', fontSize: 18 },
+  summaryLabel: { fontFamily: 'Inter_400Regular', fontSize: 10, textAlign: 'center' },
 
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
   separator: { height: spacing.sm },
@@ -232,17 +232,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 16, color: colors.vert },
+  avatarText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.vert },
   info: { flex: 1 },
-  name: { fontFamily: 'Nunito', fontWeight: '700', fontSize: 15, color: colors.gris },
-  sub: { fontFamily: 'Inter', fontSize: 12, color: colors.grisMoyen, marginTop: 2 },
-  nextDate: { fontFamily: 'Inter', fontSize: 11, color: colors.grisClair, marginTop: 1 },
+  name: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.gris },
+  sub: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.grisMoyen, marginTop: 2 },
+  nextDate: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisClair, marginTop: 1 },
 
   cardRight: { alignItems: 'flex-end', gap: spacing.xs },
   statusBadge: { borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 3 },
-  statusText: { fontFamily: 'Inter', fontWeight: '600', fontSize: 11 },
+  statusText: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
   toggleBtn: { paddingVertical: 3 },
-  toggleText: { fontFamily: 'Inter', fontSize: 11, color: colors.grisMoyen, textDecorationLine: 'underline' },
+  toggleText: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisMoyen, textDecorationLine: 'underline' },
 
-  empty: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen, textAlign: 'center', paddingTop: spacing.xxl },
+  empty: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen, textAlign: 'center', paddingTop: spacing.xxl },
 });

@@ -190,8 +190,7 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.xxl },
 
   pageTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito_900Black',
     fontSize: 28,
     color: colors.gris,
   },
@@ -205,15 +204,13 @@ const styles = StyleSheet.create({
   cardWaitlist: { backgroundColor: colors.grisMoyen },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardName: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 20,
     color: colors.blanc,
     marginBottom: spacing.sm,
   },
   cardLogo: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito_900Black',
     fontSize: 13,
     color: 'rgba(255,255,255,0.6)',
   },
@@ -231,7 +228,7 @@ const styles = StyleSheet.create({
   statusDot: { width: 6, height: 6, borderRadius: radius.full },
   statusDotActive: { backgroundColor: '#4ADE80' },
   statusDotWaitlist: { backgroundColor: '#FCD34D' },
-  statusText: { fontFamily: 'Inter', fontSize: 12, fontWeight: '500' },
+  statusText: { fontFamily: 'Inter_400Regular', fontSize: 12, fontWeight: '500' },
   statusTextActive: { color: '#4ADE80' },
   statusTextWaitlist: { color: '#FCD34D' },
 
@@ -243,7 +240,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   qrHint: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 12,
     color: colors.grisMoyen,
     textAlign: 'center',
@@ -252,7 +249,7 @@ const styles = StyleSheet.create({
   waitlistInfo: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg },
   waitlistEmoji: { fontSize: 48 },
   waitlistText: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 14,
     color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
@@ -267,7 +264,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
   cardFooterText: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
   },
@@ -281,19 +278,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   pickupTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 14,
     color: colors.grisMoyen,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  pickupName: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 18, color: colors.gris },
-  pickupAddress: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen },
+  pickupName: { fontFamily: 'Nunito_800ExtraBold', fontSize: 18, color: colors.gris },
+  pickupAddress: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
   hoursGrid: { marginTop: spacing.sm, gap: 4 },
   hoursRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  hoursDay: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen },
-  hoursValue: { fontFamily: 'Inter', fontSize: 13, color: colors.gris, fontWeight: '500' },
+  hoursDay: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen },
+  hoursValue: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.gris, fontWeight: '500' },
 
   infoBox: {
     backgroundColor: colors.vertPale,
@@ -302,12 +298,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   infoTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 14,
     color: colors.vert,
   },
-  infoStep: { fontFamily: 'Inter', fontSize: 13, color: colors.grisMoyen, lineHeight: 20 },
+  infoStep: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen, lineHeight: 20 },
 
   emptyContainer: {
     flex: 1,
@@ -317,9 +312,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   emptyEmoji: { fontSize: 64 },
-  emptyTitle: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 24, color: colors.gris },
+  emptyTitle: { fontFamily: 'Nunito_900Black', fontSize: 24, color: colors.gris },
   emptySub: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 15,
     color: colors.grisMoyen,
     textAlign: 'center',

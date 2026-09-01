@@ -162,9 +162,9 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.xxl },
 
   back: { marginBottom: spacing.sm },
-  backText: { fontFamily: 'Inter', fontSize: 15, color: colors.vert },
-  title: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 28, color: colors.gris },
-  subtitle: { fontFamily: 'Inter', fontSize: 15, color: colors.grisMoyen, lineHeight: 22 },
+  backText: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.vert },
+  title: { fontFamily: 'Nunito_900Black', fontSize: 28, color: colors.gris },
+  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.grisMoyen, lineHeight: 22 },
 
   planCard: {
     borderWidth: 2,
@@ -179,27 +179,25 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   planName: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito_900Black',
     fontSize: 20,
     color: colors.blanc,
   },
   planMultiplier: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13,
     color: 'rgba(255,255,255,0.85)',
     marginTop: 2,
   },
   planPrice: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito_900Black',
     fontSize: 18,
     color: colors.blanc,
   },
   planFeatures: { padding: spacing.lg, gap: spacing.sm },
   featureRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
   featureCheck: { fontWeight: '800', fontSize: 15, marginTop: 1 },
-  featureText: { fontFamily: 'Inter', fontSize: 14, color: colors.gris, flex: 1, lineHeight: 20 },
+  featureText: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.gris, flex: 1, lineHeight: 20 },
   subscribeBtn: {
     margin: spacing.md,
     marginTop: 0,
@@ -208,8 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subscribeBtnText: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 15,
     color: colors.blanc,
   },
@@ -223,20 +220,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   freePlanTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 16,
     color: colors.gris,
   },
   freePlanDesc: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13,
     color: colors.grisMoyen,
     lineHeight: 20,
   },
 
   legalNote: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 11,
     color: colors.grisClair,
     textAlign: 'center',

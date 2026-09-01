@@ -223,8 +223,8 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.xxl },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  greeting: { fontFamily: 'Inter', fontSize: 14, color: colors.grisMoyen },
-  pickupName: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 22, color: colors.gris, marginTop: 2 },
+  greeting: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
+  pickupName: { fontFamily: 'Nunito_900Black', fontSize: 22, color: colors.gris, marginTop: 2 },
   settingsBtn: { padding: spacing.xs },
   settingsIcon: { fontSize: 24 },
 
@@ -238,15 +238,15 @@ const styles = StyleSheet.create({
   },
   scanEmoji: { fontSize: 36 },
   scanBody: { flex: 1 },
-  scanTitle: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 18, color: colors.blanc },
-  scanSub: { fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  scanTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 18, color: colors.blanc },
+  scanSub: { fontFamily: 'Inter_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   scanBadge: {
     backgroundColor: colors.orange,
     borderRadius: radius.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  scanBadgeText: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 12, color: colors.blanc },
+  scanBadgeText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 12, color: colors.blanc },
 
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   statCard: {
@@ -261,8 +261,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statEmoji: { fontSize: 24 },
-  statValue: { fontFamily: 'Nunito', fontWeight: '900', fontSize: 22 },
-  statLabel: { fontFamily: 'Inter', fontSize: 11, color: colors.grisMoyen, textAlign: 'center' },
+  statValue: { fontFamily: 'Nunito_900Black', fontSize: 22 },
+  statLabel: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisMoyen, textAlign: 'center' },
 
   menuRow: {
     flexDirection: 'row',
@@ -275,11 +275,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   menuEmoji: { fontSize: 22 },
-  menuLabel: { flex: 1, fontFamily: 'Inter', fontSize: 14, color: colors.gris },
+  menuLabel: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.gris },
   menuArrow: { fontSize: 20, color: colors.grisClair },
 
   recentSection: { gap: spacing.sm },
-  sectionTitle: { fontFamily: 'Nunito', fontWeight: '800', fontSize: 15, color: colors.gris },
+  sectionTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15, color: colors.gris },
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,6 +291,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   recentDot: { width: 8, height: 8, borderRadius: radius.full, backgroundColor: colors.success },
-  recentName: { flex: 1, fontFamily: 'Inter', fontSize: 14, color: colors.gris },
-  recentDate: { fontFamily: 'Inter', fontSize: 12, color: colors.grisMoyen },
+  recentName: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.gris },
+  recentDate: { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.grisMoyen },
 });

@@ -101,14 +101,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.blanc },
   content: { padding: spacing.xl, gap: spacing.lg },
   headline: {
-    fontFamily: 'Nunito',
-    fontWeight: '900',
+    fontFamily: 'Nunito_900Black',
     fontSize: 32,
     color: colors.gris,
     marginTop: spacing.xl,
   },
   sub: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 15,
     color: colors.grisMoyen,
     lineHeight: 22,
@@ -131,14 +130,13 @@ const styles = StyleSheet.create({
   cardEmoji: { fontSize: 36 },
   cardBody: { flex: 1, gap: 2 },
   cardTitle: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 16,
     color: colors.gris,
   },
   cardTitleActive: { color: colors.vert },
   cardDesc: {
-    fontFamily: 'Inter',
+    fontFamily: 'Inter_400Regular',
     fontSize: 13,
     color: colors.grisMoyen,
     lineHeight: 18,
@@ -168,8 +166,7 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.4 },
   btnText: {
-    fontFamily: 'Nunito',
-    fontWeight: '800',
+    fontFamily: 'Nunito_800ExtraBold',
     fontSize: 16,
     color: colors.blanc,
   },
