@@ -124,7 +124,7 @@ export function Navigation() {
               .eq('id', session.user.id)
               .single();
             if (!data) {
-              await supabase.auth.signOut();
+              setProfile(null);
             } else {
               setProfile(data);
             }

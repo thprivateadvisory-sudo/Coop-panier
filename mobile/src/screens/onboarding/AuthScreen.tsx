@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
+import { useAuthStore } from '@/store/authStore';
 import type { UserRole } from '@/types';
 
 type Mode = 'login' | 'signup';
@@ -25,6 +26,7 @@ type Props = {
 
 export function AuthScreen({ route, navigation }: Props) {
   const role = route?.params?.role ?? 'contributor';
+  const { setProfile } = useAuthStore();
   const [mode, setMode] = useState<Mode>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,18 +68,34 @@ export function AuthScreen({ route, navigation }: Props) {
   }
 
   async function handleSignUp() {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) { Alert.alert('Erreur', error.message); return; }
-    if (!data.user) return;
+    // If already authenticated (email confirmed but no profile yet), reuse session
+    const { data: sessionData } = await supabase.auth.getSession();
+    let userId: string;
+
+    if (sessionData?.session?.user) {
+      userId = sessionData.session.user.id;
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) { Alert.alert('Erreur', error.message); return; }
+      if (!data.user) return;
+      userId = data.user.id;
+    }
 
     const { error: profileError } = await supabase.rpc('create_user_profile', {
-      p_user_id: data.user.id,
+      p_user_id: userId,
       p_email: email,
       p_full_name: fullName,
       p_role: role,
       p_referral_code: referralCode.trim() || null,
     });
     if (profileError) { Alert.alert('Erreur', profileError.message); return; }
+
+    // If already had a session, fetch and apply profile immediately (no re-login needed)
+    if (sessionData?.session?.user) {
+      const { data: profileData } = await supabase
+        .from('profiles').select('*').eq('id', userId).single();
+      if (profileData) { setProfile(profileData); return; }
+    }
 
     Alert.alert(
       'Compte créé !',
