@@ -31,7 +31,7 @@
         "backgroundColor": "#2D5016"
       },
       "package": "fr.cooppanier.app",
-      "versionCode": 6,
+      "versionCode": 7,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
       "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
@@ -59,7 +59,8 @@
         {
           "merchantIdentifier": "merchant.fr.cooppanier"
         }
-      ]
+      ],
+      "./plugins/withAndroidSdk36"
     ],
     "extra": {
       "supabaseUrl": "https://gzykmayyxkyamymaknsq.supabase.co",
