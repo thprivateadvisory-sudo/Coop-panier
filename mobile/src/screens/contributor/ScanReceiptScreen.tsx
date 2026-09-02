@@ -54,24 +54,14 @@ export function ScanReceiptScreen({ navigation }: Props) {
 
   async function handleGalleryPick() {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission refusée',
-          'Autorisez l\'accès à vos photos dans les réglages de l\'application.'
-        );
-        return;
-      }
       const picked = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
-        allowsEditing: false,
       });
       if (!picked.canceled && picked.assets[0]?.uri) {
         await processImage(picked.assets[0].uri);
       }
-    } catch {
-      Alert.alert('Erreur', 'Impossible d\'accéder à la galerie.');
+    } catch (err: any) {
+      Alert.alert('Erreur galerie', String(err?.message ?? err));
     }
   }
 
