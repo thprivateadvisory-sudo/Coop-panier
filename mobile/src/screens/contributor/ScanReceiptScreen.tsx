@@ -52,17 +52,15 @@ export function ScanReceiptScreen({ navigation }: Props) {
     setState('camera');
   }
 
-  async function handleGalleryPick() {
-    try {
-      const picked = await ImagePicker.launchImageLibraryAsync({
-        quality: 0.8,
-      });
-      if (!picked.canceled && picked.assets[0]?.uri) {
-        await processImage(picked.assets[0].uri);
-      }
-    } catch (err: any) {
-      Alert.alert('Erreur galerie', String(err?.message ?? err));
-    }
+  function handleGalleryPick() {
+    Alert.alert(
+      'Galerie non disponible',
+      'L\'import depuis la galerie nécessite une mise à jour de l\'application. Utilisez l\'appareil photo ou la saisie manuelle.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Saisie manuelle', onPress: () => setState('manual') },
+      ]
+    );
   }
 
   async function takePicture() {
@@ -308,7 +306,15 @@ export function ScanReceiptScreen({ navigation }: Props) {
 
         <TouchableOpacity style={styles.secondaryOption} onPress={handleGalleryPick} activeOpacity={0.85}>
           <Text style={styles.secondaryOptionEmoji}>🖼️</Text>
-          <Text style={styles.secondaryOptionTitle}>Importer depuis la galerie</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.secondaryOptionTitle}>Importer depuis la galerie</Text>
+            <Text style={styles.secondaryOptionSub}>Indisponible — mise à jour requise</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.manualOption} onPress={() => setState('manual')} activeOpacity={0.85}>
+          <Text style={styles.manualOptionEmoji}>✏️</Text>
+          <Text style={styles.manualOptionTitle}>Saisir le montant manuellement</Text>
         </TouchableOpacity>
 
         <View style={styles.tipsBox}>
@@ -372,6 +378,20 @@ const styles = StyleSheet.create({
   },
   secondaryOptionEmoji: { fontSize: 24 },
   secondaryOptionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.gris },
+  secondaryOptionSub: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisClair, marginTop: 2 },
+
+  manualOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.blanc,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1.5,
+    borderColor: colors.orange,
+  },
+  manualOptionEmoji: { fontSize: 24 },
+  manualOptionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.orange },
 
   tipsBox: {
     backgroundColor: colors.vertPale,
