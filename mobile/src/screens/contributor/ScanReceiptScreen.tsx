@@ -9,20 +9,20 @@ import {
   ScrollView,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
 
-type ScanState = 'idle' | 'camera' | 'processing' | 'result';
+type ScanState = 'idle' | 'camera' | 'processing' | 'result' | 'error';
 
 type OcrResult = {
-  store_name: string;
+  store_name: string | null;
   total_amount: number;
-  purchase_date: string;
+  purchase_date: string | null;
   points_earned: number;
   confidence: number;
+  receipt_id: string;
 };
 
 type Props = { navigation: any };
@@ -32,97 +32,81 @@ export function ScanReceiptScreen({ navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [state, setState] = useState<ScanState>('idle');
   const [result, setResult] = useState<OcrResult | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
   const cameraRef = useRef<CameraView>(null);
 
   async function handleCameraCapture() {
     if (!permission?.granted) {
-      await requestPermission();
-      return;
+      const { granted } = await requestPermission();
+      if (!granted) {
+        Alert.alert('Permission refusée', "Autorisez l'accès à la caméra dans les réglages.");
+        return;
+      }
     }
     setState('camera');
   }
 
-  async function handleGalleryPick() {
-    const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!picked.canceled && picked.assets[0]) {
-      await processImage(picked.assets[0].uri);
-    }
-  }
-
   async function takePicture() {
-    const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8 });
-    if (photo?.uri) {
-      setState('processing');
-      await processImage(photo.uri);
-    }
-  }
-
-  async function processImage(uri: string) {
-    setState('processing');
     try {
-      // Upload image to Supabase Storage
-      const fileName = `receipts/${profile?.id}/${Date.now()}.jpg`;
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(fileName, blob, { contentType: 'image/jpeg' });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(fileName);
-
-      // Appel à la Edge Function OCR
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
-        'process-receipt',
-        { body: { image_url: publicUrl, contributor_id: profile?.id } }
-      );
-
-      if (ocrError) throw ocrError;
-
-      setResult(ocrData as OcrResult);
-      setState('result');
-    } catch (err) {
-      Alert.alert('Erreur', 'Impossible de traiter ce ticket. Vérifiez la photo et réessayez.');
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8, base64: true });
+      if (photo?.base64) {
+        await processImage(`data:image/jpeg;base64,${photo.base64}`);
+      } else {
+        Alert.alert('Erreur', "La photo n'a pas pu être prise. Réessayez.");
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de prendre la photo.');
       setState('idle');
     }
   }
 
-  async function confirmReceipt() {
-    if (!result) return;
-    // Les points sont déjà crédités par la Edge Function
-    Alert.alert(
-      '🎉 Bravo !',
-      `Vous venez de gagner ${result.points_earned} points !`,
-      [{ text: 'Super !', onPress: () => navigation.goBack() }]
-    );
+  async function processImage(base64: string) {
+    setState('processing');
+
+    try {
+      const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
+        'process-receipt',
+        { body: { image_base64: base64, contributor_id: profile?.id } }
+      );
+
+      if (ocrError) throw new Error(ocrError.message);
+
+      if (!ocrData?.total_amount || ocrData.total_amount <= 0) {
+        setErrorMsg(
+          "Le montant total n'a pas pu être détecté sur ce ticket.\n\nAssurez-vous que le total est bien visible et réessayez."
+        );
+        setState('error');
+        return;
+      }
+
+      setResult(ocrData as OcrResult);
+      setState('result');
+    } catch (err: any) {
+      const msg = String(err?.message ?? err);
+      if (msg.includes('GOOGLE_VISION') || msg.includes('API key') || msg.includes('credential')) {
+        setErrorMsg("Le service de lecture de tickets est temporairement indisponible.\nVeuillez réessayer plus tard.");
+      } else {
+        setErrorMsg("Le ticket n'a pas pu être analysé.\n\nConseils :\n· Assurez-vous que le ticket est bien éclairé\n· Le total doit être clairement visible\n· Évitez les ombres et reflets");
+      }
+      setState('error');
+    }
   }
 
+  // ─── Camera ───────────────────────────────────────────────────────────────
   if (state === 'camera') {
     return (
       <View style={styles.cameraContainer}>
         <CameraView ref={cameraRef} style={styles.camera} facing="back">
           <View style={styles.cameraOverlay}>
             <View style={styles.receiptFrame} />
-            <Text style={styles.cameraHint}>
-              Centrez votre ticket dans le cadre
-            </Text>
+            <Text style={styles.cameraHint}>Centrez votre ticket dans le cadre</Text>
           </View>
         </CameraView>
         <View style={styles.cameraControls}>
           <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
             <View style={styles.captureInner} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => setState('idle')}
-          >
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => setState('idle')}>
             <Text style={styles.cancelText}>Annuler</Text>
           </TouchableOpacity>
         </View>
@@ -130,29 +114,53 @@ export function ScanReceiptScreen({ navigation }: Props) {
     );
   }
 
+  // ─── Processing ───────────────────────────────────────────────────────────
   if (state === 'processing') {
     return (
       <View style={styles.processingContainer}>
         <ActivityIndicator size="large" color={colors.vert} />
         <Text style={styles.processingTitle}>Analyse en cours…</Text>
-        <Text style={styles.processingSub}>
-          Notre OCR lit votre ticket et calcule vos points
-        </Text>
+        <Text style={styles.processingSub}>Lecture de votre ticket de caisse</Text>
       </View>
     );
   }
 
+  // ─── Error ────────────────────────────────────────────────────────────────
+  if (state === 'error') {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <ScrollView contentContainerStyle={styles.centeredScroll}>
+          <Text style={styles.errorEmoji}>📷</Text>
+          <Text style={styles.errorTitle}>Ticket non reconnu</Text>
+          <Text style={styles.errorMsg}>{errorMsg}</Text>
+
+          <TouchableOpacity style={styles.retryBtn} onPress={() => setState('camera')} activeOpacity={0.85}>
+            <Text style={styles.retryBtnText}>Réessayer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setState('idle')}>
+            <Text style={styles.cancelLink}>Annuler</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ─── Result (OCR success) ──────────────────────────────────────────────────
   if (state === 'result' && result) {
-    const confidence = Math.round(result.confidence * 100);
+    const confidence = Math.round((result.confidence ?? 0) * 100);
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.resultTitle}>Ticket reconnu ✓</Text>
 
           <View style={styles.resultCard}>
-            <ResultRow label="Magasin" value={result.store_name || 'Non détecté'} />
-            <ResultRow label="Total" value={`${result.total_amount?.toFixed(2)} €`} />
-            <ResultRow label="Date" value={result.purchase_date || '—'} />
+            {!!result.store_name && (
+              <ResultRow label="Magasin" value={result.store_name} />
+            )}
+            <ResultRow label="Total" value={`${result.total_amount.toFixed(2)} €`} />
+            {!!result.purchase_date && (
+              <ResultRow label="Date" value={result.purchase_date} />
+            )}
             <ResultRow label="Fiabilité OCR" value={`${confidence}%`} />
           </View>
 
@@ -161,18 +169,35 @@ export function ScanReceiptScreen({ navigation }: Props) {
             <Text style={styles.pointsBannerValue}>+{result.points_earned} pts</Text>
           </View>
 
-          <TouchableOpacity style={styles.confirmBtn} onPress={confirmReceipt} activeOpacity={0.85}>
+          <View style={styles.antifraudNote}>
+            <Text style={styles.antifraudText}>
+              Le montant est détecté automatiquement par lecture du ticket. Il ne peut pas être modifié.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.confirmBtn}
+            onPress={() => {
+              Alert.alert(
+                '🎉 Bravo !',
+                `Vous avez gagné ${result.points_earned} points pour ${result.total_amount.toFixed(2)} € d'achats !`,
+                [{ text: 'Super !', onPress: () => navigation.goBack() }]
+              );
+            }}
+            activeOpacity={0.85}
+          >
             <Text style={styles.confirmBtnText}>Valider et créditer mes points</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setState('idle')}>
-            <Text style={styles.retryText}>Ce n'est pas bon ? Réessayer</Text>
+            <Text style={styles.retryLink}>Ce n'est pas bon ? Réessayer</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
+  // ─── Idle ─────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -182,20 +207,23 @@ export function ScanReceiptScreen({ navigation }: Props) {
 
         <Text style={styles.title}>Scanner un ticket</Text>
         <Text style={styles.subtitle}>
-          Photographiez votre ticket de caisse pour gagner des points.
-          1€ d'achat = 10 points.
+          Photographiez votre ticket de caisse pour gagner des points.{'\n'}
+          1 € d'achat = 1 point.
         </Text>
 
         <TouchableOpacity style={styles.mainOption} onPress={handleCameraCapture} activeOpacity={0.85}>
           <Text style={styles.mainOptionEmoji}>📸</Text>
           <Text style={styles.mainOptionTitle}>Prendre une photo</Text>
-          <Text style={styles.mainOptionSub}>Utilisez l'appareil photo de votre téléphone</Text>
+          <Text style={styles.mainOptionSub}>Le montant sera détecté automatiquement</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryOption} onPress={handleGalleryPick} activeOpacity={0.85}>
-          <Text style={styles.secondaryOptionEmoji}>🖼️</Text>
-          <Text style={styles.secondaryOptionTitle}>Importer depuis la galerie</Text>
-        </TouchableOpacity>
+        <View style={styles.disabledOption}>
+          <Text style={styles.disabledEmoji}>🖼️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.disabledTitle}>Importer depuis la galerie</Text>
+            <Text style={styles.disabledSub}>Disponible dans une prochaine mise à jour</Text>
+          </View>
+        </View>
 
         <View style={styles.tipsBox}>
           <Text style={styles.tipsTitle}>Pour une meilleure reconnaissance</Text>
@@ -223,7 +251,15 @@ function ResultRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.fond },
-  scroll: { padding: spacing.xl, gap: spacing.lg },
+  scroll: { padding: spacing.xl, gap: spacing.lg, paddingBottom: spacing.xxl },
+  centeredScroll: {
+    padding: spacing.xl,
+    gap: spacing.lg,
+    paddingBottom: spacing.xxl,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   backBtn: { marginBottom: spacing.sm },
   backText: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.vert },
@@ -238,19 +274,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   mainOptionEmoji: { fontSize: 48 },
-  mainOptionTitle: {
-    fontFamily: 'Nunito_800ExtraBold',
-    fontSize: 18,
-    color: colors.blanc,
-  },
+  mainOptionTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 18, color: colors.blanc },
   mainOptionSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
   },
 
-  secondaryOption: {
+  disabledOption: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -259,13 +291,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.bordure,
+    opacity: 0.5,
   },
-  secondaryOptionEmoji: { fontSize: 24 },
-  secondaryOptionTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 15,
-    color: colors.gris,
-  },
+  disabledEmoji: { fontSize: 24 },
+  disabledTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: colors.gris },
+  disabledSub: { fontFamily: 'Inter_400Regular', fontSize: 11, color: colors.grisMoyen, marginTop: 2 },
 
   tipsBox: {
     backgroundColor: colors.vertPale,
@@ -337,11 +367,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.xxl,
   },
-  processingTitle: {
-    fontFamily: 'Nunito_800ExtraBold',
-    fontSize: 22,
-    color: colors.gris,
-  },
+  processingTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 22, color: colors.gris },
   processingSub: {
     fontFamily: 'Inter_400Regular',
     fontSize: 14,
@@ -349,12 +375,34 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Result
-  resultTitle: {
-    fontFamily: 'Nunito_900Black',
-    fontSize: 26,
-    color: colors.vert,
+  // Error
+  errorEmoji: { fontSize: 56, textAlign: 'center' },
+  errorTitle: { fontFamily: 'Nunito_900Black', fontSize: 24, color: colors.gris, textAlign: 'center' },
+  errorMsg: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    color: colors.grisMoyen,
+    textAlign: 'center',
+    lineHeight: 22,
   },
+  retryBtn: {
+    backgroundColor: colors.vert,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    paddingHorizontal: spacing.xxl,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  retryBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.blanc },
+  cancelLink: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    color: colors.grisMoyen,
+    textAlign: 'center',
+  },
+
+  // Result
+  resultTitle: { fontFamily: 'Nunito_900Black', fontSize: 26, color: colors.vert },
   resultCard: {
     backgroundColor: colors.blanc,
     borderRadius: radius.md,
@@ -378,15 +426,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
   },
-  pointsBannerLabel: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: colors.grisMoyen,
+  pointsBannerLabel: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen },
+  pointsBannerValue: { fontFamily: 'Nunito_900Black', fontSize: 40, color: colors.vert },
+  antifraudNote: {
+    backgroundColor: '#FFF9E6',
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.orange,
   },
-  pointsBannerValue: {
-    fontFamily: 'Nunito_900Black',
-    fontSize: 40,
-    color: colors.vert,
+  antifraudText: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: colors.grisMoyen,
+    lineHeight: 18,
   },
   confirmBtn: {
     backgroundColor: colors.vert,
@@ -394,12 +447,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  confirmBtnText: {
-    fontFamily: 'Nunito_800ExtraBold',
-    fontSize: 16,
-    color: colors.blanc,
-  },
-  retryText: {
+  confirmBtnText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.blanc },
+  retryLink: {
     fontFamily: 'Inter_400Regular',
     fontSize: 14,
     color: colors.grisMoyen,

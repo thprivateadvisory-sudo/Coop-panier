@@ -105,39 +105,34 @@ function AssociationApp() {
   );
 }
 
-const OnboardingScreens = () => (
-  <>
-    <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-    <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
-    <Stack.Screen name="AuthStack" component={AuthScreen} />
-  </>
-);
-
 export function Navigation() {
   const { session, profile, setSession, setProfile, loading } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => setSession(session))
+      .catch(() => setSession(null));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        if (session) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (!data) {
-            // Session orpheline sans profil — déconnecter
-            await supabase.auth.signOut();
+        try {
+          setSession(session);
+          if (session) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            if (!data) {
+              setProfile(null);
+            } else {
+              setProfile(data);
+            }
           } else {
-            setProfile(data);
+            setProfile(null);
           }
-        } else {
-          setProfile(null);
+        } catch {
+          setSession(null);
         }
       }
     );
@@ -152,17 +147,18 @@ export function Navigation() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!session ? (
-          <OnboardingScreens />
-        ) : profile?.role === 'contributor' ? (
+        {!session || !profile?.role ? (
+          <>
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
+            <Stack.Screen name="AuthStack" component={AuthScreen} />
+          </>
+        ) : profile.role === 'contributor' ? (
           <Stack.Screen name="ContributorApp" component={ContributorTabs} />
-        ) : profile?.role === 'beneficiary' ? (
+        ) : profile.role === 'beneficiary' ? (
           <Stack.Screen name="BeneficiaryApp" component={BeneficiaryTabs} />
-        ) : profile?.role === 'association' ? (
-          <Stack.Screen name="AssociationApp" component={AssociationApp} />
         ) : (
-          // session présente mais profil pas encore chargé → onboarding complet accessible
-          <OnboardingScreens />
+          <Stack.Screen name="AssociationApp" component={AssociationApp} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

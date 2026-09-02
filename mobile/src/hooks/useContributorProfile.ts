@@ -8,33 +8,42 @@ export function useContributorProfile(profileId: string) {
   useEffect(() => {
     if (!profileId) return;
 
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     async function fetchInitial() {
-      const { data } = await supabase
-        .from('contributor_profiles')
-        .select('*')
-        .eq('profile_id', profileId)
-        .single();
-      if (data) setProfile(data);
+      try {
+        const { data } = await supabase
+          .from('contributor_profiles')
+          .select('*')
+          .eq('profile_id', profileId)
+          .single();
+        if (data) setProfile(data);
+      } catch {}
     }
 
     fetchInitial();
 
-    // Points et paniers se mettent à jour en temps réel
-    const channel = supabase
-      .channel(`contributor_${profileId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'contributor_profiles',
-          filter: `profile_id=eq.${profileId}`,
-        },
-        (payload) => setProfile(payload.new as ContributorProfile)
-      )
-      .subscribe();
+    try {
+      channel = supabase
+        .channel(`contributor_profile_${profileId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'contributor_profiles',
+            filter: `profile_id=eq.${profileId}`,
+          },
+          (payload) => setProfile(payload.new as ContributorProfile)
+        )
+        .subscribe();
+    } catch {}
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (channel) {
+        try { supabase.removeChannel(channel); } catch {}
+      }
+    };
   }, [profileId]);
 
   return profile;

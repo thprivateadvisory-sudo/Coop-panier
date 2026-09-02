@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
+import { useAuthStore } from '@/store/authStore';
 import type { UserRole } from '@/types';
 
 type Mode = 'login' | 'signup';
@@ -25,6 +26,7 @@ type Props = {
 
 export function AuthScreen({ route, navigation }: Props) {
   const role = route?.params?.role ?? 'contributor';
+  const { setProfile } = useAuthStore();
   const [mode, setMode] = useState<Mode>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,35 +68,43 @@ export function AuthScreen({ route, navigation }: Props) {
   }
 
   async function handleSignUp() {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) { Alert.alert('Erreur', error.message); return; }
-    if (!data.user) return;
+    let userId: string;
+    let hasActiveSession = false;
 
-    // Créer le profil
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      email,
-      full_name: fullName,
-      role,
+    // 1. Check for existing session (e.g. email already confirmed in browser)
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData?.session?.user) {
+      userId = sessionData.session.user.id;
+      hasActiveSession = true;
+    } else {
+      // 2. Try signing in — if email already confirmed, this gives us the real UUID
+      const { data: signInData } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInData?.session?.user) {
+        userId = signInData.session.user.id;
+        hasActiveSession = true;
+      } else {
+        // 3. Truly new user — create auth account
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) { Alert.alert('Erreur', error.message); return; }
+        if (!data.user) return;
+        userId = data.user.id;
+      }
+    }
+
+    const { error: profileError } = await supabase.rpc('create_user_profile', {
+      p_user_id: userId,
+      p_email: email,
+      p_full_name: fullName,
+      p_role: role,
+      p_referral_code: referralCode.trim() || null,
     });
     if (profileError) { Alert.alert('Erreur', profileError.message); return; }
 
-    // Créer le sous-profil selon le rôle
-    if (role === 'contributor') {
-      await supabase.from('contributor_profiles').insert({
-        profile_id: data.user.id,
-        ...(referralCode.trim() ? { referred_by: referralCode.trim().toUpperCase() } : {}),
-      });
-    } else if (role === 'beneficiary') {
-      await supabase.from('beneficiary_profiles').insert({ profile_id: data.user.id });
-    } else if (role === 'association') {
-      await supabase.from('association_profiles').insert({
-        profile_id: data.user.id,
-        association_name: fullName,
-        address: '',
-        city: '',
-        postal_code: '',
-      });
+    // If already signed in, fetch profile and navigate immediately
+    if (hasActiveSession) {
+      const { data: profileData } = await supabase
+        .from('profiles').select('*').eq('id', userId).single();
+      if (profileData) { setProfile(profileData); return; }
     }
 
     Alert.alert(
