@@ -9,6 +9,15 @@ on:
       - 'mobile/**'
       - '.github/workflows/eas-build.yml'
   workflow_dispatch:
+    inputs:
+      build_apk:
+        description: 'Générer un APK de test (installe directement sur téléphone)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   update:
@@ -44,6 +53,7 @@ jobs:
   build:
     name: Build Android (Play Store)
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,3 +78,32 @@ jobs:
       - name: Run EAS build
         working-directory: mobile
         run: eas build --platform android --profile production --non-interactive
+
+  build_apk:
+    name: Build APK de test (logo)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_apk == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Build APK with EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Run EAS preview build (APK)
+        working-directory: mobile
+        run: eas build --platform android --profile preview --non-interactive
