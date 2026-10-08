@@ -12,23 +12,39 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
-import { useAuthStore } from '@/store/authStore';
 
-type ScanState = 'idle' | 'camera' | 'processing' | 'result' | 'error';
+// Même API sécurisée que l'application web : lecture du ticket (scan-receipt)
+// puis crédit des points côté serveur (submit-scan).
+const API_URL = 'https://coop-panier.vercel.app/api';
+
+type ScanState = 'idle' | 'camera' | 'processing' | 'result' | 'error' | 'submitting';
 
 type OcrResult = {
-  store_name: string | null;
-  total_amount: number;
-  purchase_date: string | null;
-  points_earned: number;
-  confidence: number;
-  receipt_id: string;
+  storeName: string | null;
+  detectedAmount: number | null;
+  purchaseDate: string | null;
+  confidence: number | null;
+  imageUrl: string | null;
+  amountToken: string | null;
 };
 
 type Props = { navigation: any };
 
+async function postJson(path: string, body: unknown) {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('auth');
+  const resp = await fetch(`${API_URL}/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+  let json: any = null;
+  try { json = await resp.json(); } catch {}
+  return { ok: resp.ok, status: resp.status, data: json, userId: data.session?.user.id };
+}
+
 export function ScanReceiptScreen({ navigation }: Props) {
-  const profile = useAuthStore((s) => s.profile);
   const [permission, requestPermission] = useCameraPermissions();
   const [state, setState] = useState<ScanState>('idle');
   const [result, setResult] = useState<OcrResult | null>(null);
@@ -48,7 +64,8 @@ export function ScanReceiptScreen({ navigation }: Props) {
 
   async function takePicture() {
     try {
-      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8, base64: true });
+      // Qualité réduite : l'image doit rester sous la limite de taille du serveur
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.35, base64: true });
       if (photo?.base64) {
         await processImage(`data:image/jpeg;base64,${photo.base64}`);
       } else {
@@ -60,35 +77,68 @@ export function ScanReceiptScreen({ navigation }: Props) {
     }
   }
 
+  function showError(msg: string) {
+    setErrorMsg(msg);
+    setState('error');
+  }
+
   async function processImage(base64: string) {
     setState('processing');
-
     try {
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
-        'process-receipt',
-        { body: { image_base64: base64, contributor_id: profile?.id } }
-      );
+      const { data: sess } = await supabase.auth.getSession();
+      const { ok, status, data } = await postJson('scan-receipt', {
+        imageBase64: base64,
+        contributorId: sess.session?.user.id,
+      });
 
-      if (ocrError) throw new Error(ocrError.message);
+      if (status === 413) {
+        showError("La photo est trop lourde. Réessayez en vous rapprochant du ticket.");
+        return;
+      }
+      if (!ok) throw new Error(data?.error ?? String(status));
 
-      if (!ocrData?.total_amount || ocrData.total_amount <= 0) {
-        setErrorMsg(
+      if (data?.detectedAmount == null || !data?.amountToken) {
+        showError(
           "Le montant total n'a pas pu être détecté sur ce ticket.\n\nAssurez-vous que le total est bien visible et réessayez."
         );
-        setState('error');
         return;
       }
 
-      setResult(ocrData as OcrResult);
+      setResult(data as OcrResult);
       setState('result');
-    } catch (err: any) {
-      const msg = String(err?.message ?? err);
-      if (msg.includes('GOOGLE_VISION') || msg.includes('API key') || msg.includes('credential')) {
-        setErrorMsg("Le service de lecture de tickets est temporairement indisponible.\nVeuillez réessayer plus tard.");
-      } else {
-        setErrorMsg("Le ticket n'a pas pu être analysé.\n\nConseils :\n· Assurez-vous que le ticket est bien éclairé\n· Le total doit être clairement visible\n· Évitez les ombres et reflets");
+    } catch {
+      showError("Le ticket n'a pas pu être analysé.\n\nVérifiez votre connexion internet, puis réessayez :\n· Ticket bien éclairé\n· Total clairement visible\n· Évitez les ombres et reflets");
+    }
+  }
+
+  async function confirmReceipt() {
+    if (!result?.detectedAmount || !result.amountToken) return;
+    setState('submitting');
+    try {
+      const { ok, data } = await postJson('submit-scan', {
+        detectedAmount: result.detectedAmount,
+        amountToken: result.amountToken,
+        imageHash: null,
+        imageUrl: result.imageUrl || null,
+        storeName: result.storeName ?? null,
+        purchaseDate: result.purchaseDate ?? null,
+        ocrConfidence: result.confidence ?? null,
+      });
+      if (!ok) {
+        Alert.alert('Ticket refusé', data?.error ?? 'Erreur lors de la validation.');
+        setState('result');
+        return;
       }
-      setState('error');
+      setResult(null);
+      setState('idle');
+      Alert.alert(
+        '🎉 Bravo !',
+        `Vous avez gagné ${data?.earned ?? 0} points !`,
+        [{ text: 'Super !', onPress: () => navigation.navigate('Home') }]
+      );
+    } catch {
+      Alert.alert('Erreur', 'Impossible de valider le ticket. Vérifiez votre connexion et réessayez.');
+      setState('result');
     }
   }
 
@@ -115,12 +165,14 @@ export function ScanReceiptScreen({ navigation }: Props) {
   }
 
   // ─── Processing ───────────────────────────────────────────────────────────
-  if (state === 'processing') {
+  if (state === 'processing' || state === 'submitting') {
     return (
       <View style={styles.processingContainer}>
         <ActivityIndicator size="large" color={colors.vert} />
         <Text style={styles.processingTitle}>Analyse en cours…</Text>
-        <Text style={styles.processingSub}>Lecture de votre ticket de caisse</Text>
+        <Text style={styles.processingSub}>
+          {state === 'submitting' ? 'Crédit de vos points' : 'Lecture de votre ticket de caisse'}
+        </Text>
       </View>
     );
   }
@@ -147,26 +199,18 @@ export function ScanReceiptScreen({ navigation }: Props) {
 
   // ─── Result (OCR success) ──────────────────────────────────────────────────
   if (state === 'result' && result) {
-    const confidence = Math.round((result.confidence ?? 0) * 100);
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.resultTitle}>Ticket reconnu ✓</Text>
 
           <View style={styles.resultCard}>
-            {!!result.store_name && (
-              <ResultRow label="Magasin" value={result.store_name} />
+            {!!result.storeName && <ResultRow label="Magasin" value={result.storeName} />}
+            <ResultRow label="Total" value={`${(result.detectedAmount ?? 0).toFixed(2)} €`} />
+            {!!result.purchaseDate && <ResultRow label="Date" value={result.purchaseDate} />}
+            {result.confidence != null && (
+              <ResultRow label="Fiabilité OCR" value={`${Math.round(result.confidence * 100)}%`} />
             )}
-            <ResultRow label="Total" value={`${result.total_amount.toFixed(2)} €`} />
-            {!!result.purchase_date && (
-              <ResultRow label="Date" value={result.purchase_date} />
-            )}
-            <ResultRow label="Fiabilité OCR" value={`${confidence}%`} />
-          </View>
-
-          <View style={styles.pointsBanner}>
-            <Text style={styles.pointsBannerLabel}>Points à créditer</Text>
-            <Text style={styles.pointsBannerValue}>+{result.points_earned} pts</Text>
           </View>
 
           <View style={styles.antifraudNote}>
@@ -175,21 +219,11 @@ export function ScanReceiptScreen({ navigation }: Props) {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.confirmBtn}
-            onPress={() => {
-              Alert.alert(
-                '🎉 Bravo !',
-                `Vous avez gagné ${result.points_earned} points pour ${result.total_amount.toFixed(2)} € d'achats !`,
-                [{ text: 'Super !', onPress: () => navigation.goBack() }]
-              );
-            }}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={styles.confirmBtn} onPress={confirmReceipt} activeOpacity={0.85}>
             <Text style={styles.confirmBtnText}>Valider et créditer mes points</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setState('idle')}>
+          <TouchableOpacity onPress={() => { setResult(null); setState('idle'); }}>
             <Text style={styles.retryLink}>Ce n'est pas bon ? Réessayer</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -201,10 +235,6 @@ export function ScanReceiptScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹ Retour</Text>
-        </TouchableOpacity>
-
         <Text style={styles.title}>Scanner un ticket</Text>
         <Text style={styles.subtitle}>
           Photographiez votre ticket de caisse pour gagner des points.{'\n'}
@@ -261,8 +291,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  backBtn: { marginBottom: spacing.sm },
-  backText: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.vert },
   title: { fontFamily: 'Nunito_900Black', fontSize: 28, color: colors.gris },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.grisMoyen, lineHeight: 22 },
 
@@ -419,15 +447,6 @@ const styles = StyleSheet.create({
   },
   resultLabel: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
   resultValue: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: colors.gris },
-  pointsBanner: {
-    backgroundColor: colors.vertPale,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  pointsBannerLabel: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen },
-  pointsBannerValue: { fontFamily: 'Nunito_900Black', fontSize: 40, color: colors.vert },
   antifraudNote: {
     backgroundColor: '#FFF9E6',
     borderRadius: radius.sm,

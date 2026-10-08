@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
@@ -115,7 +116,7 @@ export function AssociationHomeScreen({ navigation }: Props) {
             <Text style={styles.greeting}>Bonjour 👋</Text>
             <Text style={styles.pickupName}>{pickupName || 'Votre point de retrait'}</Text>
           </View>
-          <TouchableOpacity style={styles.settingsBtn} onPress={() => navigation.navigate('AssociationSettings')}>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => Alert.alert('Paramètres', 'Pour modifier les informations de votre association, écrivez-nous à contact@cooppanier.fr.')}>
             <Text style={styles.settingsIcon}>⚙️</Text>
           </TouchableOpacity>
         </View>
@@ -172,16 +173,6 @@ export function AssociationHomeScreen({ navigation }: Props) {
         >
           <Text style={styles.menuEmoji}>👥</Text>
           <Text style={styles.menuLabel}>Liste des bénéficiaires</Text>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuRow}
-          onPress={() => navigation.navigate('DistributionHistory')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.menuEmoji}>📋</Text>
-          <Text style={styles.menuLabel}>Historique des distributions</Text>
           <Text style={styles.menuArrow}>›</Text>
         </TouchableOpacity>
 

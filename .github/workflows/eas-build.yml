@@ -68,10 +68,13 @@ jobs:
           MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
           eas update --channel production --message "$MSG" --non-interactive
 
+  # Build natif uniquement à la demande (bouton « Run workflow ») :
+  # chaque build consomme le quota mensuel Expo. Les corrections de code
+  # passent par la mise à jour OTA ci-dessus, à chaque push.
   build:
     name: Build Android (Play Store)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_apk != 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
