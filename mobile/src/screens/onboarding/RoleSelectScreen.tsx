@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
@@ -38,13 +37,10 @@ type Props = {
 
 export function RoleSelectScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(false);
 
   function handleContinue() {
     if (!selected) return;
-    if (selected === 'contributor') navigation.navigate('AuthStack', { role: selected });
-    else if (selected === 'beneficiary') navigation.navigate('AuthStack', { role: selected });
-    else navigation.navigate('AuthStack', { role: selected });
+    navigation.navigate('AuthStack', { role: selected });
   }
 
   return (
@@ -83,14 +79,10 @@ export function RoleSelectScreen({ navigation }: Props) {
         <TouchableOpacity
           style={[styles.btn, !selected && styles.btnDisabled]}
           onPress={handleContinue}
-          disabled={!selected || loading}
+          disabled={!selected}
           activeOpacity={0.85}
         >
-          {loading ? (
-            <ActivityIndicator color={colors.blanc} />
-          ) : (
-            <Text style={styles.btnText}>Continuer</Text>
-          )}
+          <Text style={styles.btnText}>Continuer</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -122,6 +114,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.bordure,
     backgroundColor: colors.fond,
+    minHeight: 80,
   },
   cardActive: {
     borderColor: colors.vert,

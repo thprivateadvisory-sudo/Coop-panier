@@ -7,11 +7,39 @@ on:
       - claude/app-limit-september-first-4nfdeq
     paths:
       - 'mobile/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/eas-build.yml'
   workflow_dispatch:
+    inputs:
+      build_apk:
+        description: 'Générer un APK de test (installe directement sur téléphone)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
-  build:
-    name: Build Android (Play Store)
+  deploy_functions:
+    name: Deploy Supabase Functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy process-receipt function
+        run: supabase functions deploy process-receipt --project-ref gzykmayyxkyamymaknsq
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+  update:
+    name: OTA Update (instant)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,7 +48,38 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish OTA update
+        working-directory: mobile
+        run: |
+          MSG=$(echo "${{ github.event.head_commit.message }}" | head -1)
+          eas update --channel production --message "$MSG" --non-interactive
+
+  build:
+    name: Build Android (Play Store)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
           cache: npm
           cache-dependency-path: mobile/package-lock.json
 
@@ -37,3 +96,32 @@ jobs:
       - name: Run EAS build
         working-directory: mobile
         run: eas build --platform android --profile production --non-interactive
+
+  build_apk:
+    name: Build APK de test (logo)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_apk == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Build APK with EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Run EAS preview build (APK)
+        working-directory: mobile
+        run: eas build --platform android --profile preview --non-interactive

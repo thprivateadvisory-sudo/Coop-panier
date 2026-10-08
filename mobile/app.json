@@ -15,7 +15,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2D5016"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": false,
@@ -31,8 +31,10 @@
         "backgroundColor": "#2D5016"
       },
       "package": "fr.cooppanier.app",
-      "versionCode": 5,
-      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
+      "versionCode": 9,
+      "compileSdkVersion": 36,
+      "targetSdkVersion": 36,
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE", "READ_MEDIA_IMAGES", "READ_MEDIA_VIDEO"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -57,7 +59,8 @@
         {
           "merchantIdentifier": "merchant.fr.cooppanier"
         }
-      ]
+      ],
+      "./plugins/withAndroidSdk36"
     ],
     "extra": {
       "supabaseUrl": "https://gzykmayyxkyamymaknsq.supabase.co",

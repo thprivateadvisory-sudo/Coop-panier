@@ -53,7 +53,7 @@ export function ContributorHomeScreen({ navigation }: Props) {
             <View>
               <Text style={styles.pointsLabel}>Points disponibles</Text>
               {contributor ? (
-                <Text style={styles.pointsValue}>
+                <Text style={styles.pointsValue} adjustsFontSizeToFit numberOfLines={1}>
                   {contributor.points_available.toLocaleString('fr-FR')}
                 </Text>
               ) : (
@@ -86,7 +86,7 @@ export function ContributorHomeScreen({ navigation }: Props) {
           activeOpacity={0.85}
         >
           <Text style={styles.scanEmoji}>📸</Text>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.scanTitle}>Scanner un ticket</Text>
             <Text style={styles.scanSub}>Gagnez des points en quelques secondes</Text>
           </View>
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   scanEmoji: { fontSize: 32 },
   scanTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.gris },
   scanSub: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisMoyen, marginTop: 2 },
-  scanArrow: { marginLeft: 'auto', fontSize: 24, color: colors.grisMoyen },
+  scanArrow: { fontSize: 24, color: colors.grisMoyen },
 
   quickStats: {
     flexDirection: 'row',
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   impactGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   impactTile: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: '48%',
     backgroundColor: colors.blanc,
     borderRadius: radius.md,
     borderWidth: 1,

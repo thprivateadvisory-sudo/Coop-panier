@@ -83,9 +83,10 @@ export function OnboardingScreen({ navigation }: Props) {
             </Text>
           </View>
         )}
+        onScrollToIndexFailed={() => {}}
       />
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: slides[activeIndex].bg }]}>
         <View style={styles.dots}>
           {slides.map((_, i) => (
             <View
@@ -95,15 +96,21 @@ export function OnboardingScreen({ navigation }: Props) {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.btn} onPress={handleNext} activeOpacity={0.85}>
-          <Text style={styles.btnText}>
+        <TouchableOpacity
+          style={[styles.btn, { backgroundColor: slides[activeIndex].textColor }]}
+          onPress={handleNext}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.btnText, { color: slides[activeIndex].bg }]}>
             {activeIndex < slides.length - 1 ? 'Suivant' : 'Commencer'}
           </Text>
         </TouchableOpacity>
 
         {activeIndex < slides.length - 1 && (
           <TouchableOpacity onPress={() => navigation.navigate('RoleSelect')}>
-            <Text style={styles.skip}>Passer</Text>
+            <Text style={[styles.skip, { color: slides[activeIndex].textColor, opacity: 0.6 }]}>
+              Passer
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -139,14 +146,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.blanc,
   },
   dots: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.md },
-  dot: { width: 8, height: 8, borderRadius: radius.full, backgroundColor: colors.bordure },
-  dotActive: { backgroundColor: colors.vert, width: 24 },
+  dot: { width: 8, height: 8, borderRadius: radius.full, backgroundColor: 'rgba(0,0,0,0.2)' },
+  dotActive: { backgroundColor: 'rgba(0,0,0,0.5)', width: 24 },
   btn: {
     width: '100%',
-    backgroundColor: colors.vert,
     borderRadius: radius.md,
     paddingVertical: 16,
     alignItems: 'center',
@@ -154,11 +159,9 @@ const styles = StyleSheet.create({
   btnText: {
     fontFamily: 'Nunito_800ExtraBold',
     fontSize: 16,
-    color: colors.blanc,
   },
   skip: {
     fontFamily: 'Inter_400Regular',
     fontSize: 14,
-    color: colors.grisMoyen,
   },
 });

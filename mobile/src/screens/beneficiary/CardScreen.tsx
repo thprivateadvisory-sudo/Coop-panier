@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +13,8 @@ import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
 import type { BeneficiaryProfile, PickupPoint } from '@/types';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 export function BeneficiaryCardScreen() {
   const profile = useAuthStore((s) => s.profile);
@@ -103,8 +106,8 @@ export function BeneficiaryCardScreen() {
         {/* Carte principale */}
         <View style={[styles.card, isWaitlist && styles.cardWaitlist]}>
           <View style={styles.cardHeader}>
-            <View>
-              <Text style={styles.cardName}>{profile?.full_name}</Text>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.cardName} numberOfLines={1}>{profile?.full_name}</Text>
               <View style={[styles.statusBadge, isActive && styles.statusActive, isWaitlist && styles.statusWaitlist]}>
                 <View style={[styles.statusDot, isActive ? styles.statusDotActive : styles.statusDotWaitlist]} />
                 <Text style={[styles.statusText, isActive ? styles.statusTextActive : styles.statusTextWaitlist]}>
@@ -119,7 +122,7 @@ export function BeneficiaryCardScreen() {
             <View style={styles.qrContainer}>
               <QRCode
                 value={qrPayload}
-                size={200}
+                size={Math.min(200, screenWidth - 120)}
                 color={colors.gris}
                 backgroundColor={colors.blanc}
               />
