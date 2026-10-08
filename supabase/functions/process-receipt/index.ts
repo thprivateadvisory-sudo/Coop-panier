@@ -34,6 +34,13 @@ serve(async (req: Request) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  // Seul l'utilisateur connecté peut scanner pour son propre compte
+  const token = (req.headers.get('authorization') ?? '').replace('Bearer ', '');
+  const { data: { user: authUser } } = await supabase.auth.getUser(token);
+  if (!authUser || authUser.id !== contributor_id) {
+    return new Response(JSON.stringify({ error: 'Non autorisé' }), { status: 401 });
+  }
+
   // ─── 1. Appel Claude Haiku pour l'OCR ──────────────────────────────────────
 
   // Préparation de l'image

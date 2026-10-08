@@ -144,7 +144,10 @@ export function Navigation() {
               .select('*')
               .eq('id', session.user.id)
               .maybeSingle();
-            setProfile(data ?? null);
+            // Ne pas effacer un profil déjà chargé pour ce même utilisateur
+            // (ex. profil créé juste après l'inscription, pendant cette requête)
+            const current = useAuthStore.getState().profile;
+            setProfile(data ?? (current?.id === session.user.id ? current : null));
           } catch {
             // Réseau indisponible : on garde la session
           }

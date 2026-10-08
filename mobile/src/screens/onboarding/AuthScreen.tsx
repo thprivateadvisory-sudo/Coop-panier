@@ -10,6 +10,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
@@ -78,23 +79,32 @@ export function AuthScreen({ route, navigation }: Props) {
       hasActiveSession = true;
     } else {
       // 2. Try signing in — if email already confirmed, this gives us the real UUID
-      const { data: signInData } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signInData } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInData?.session?.user) {
         userId = signInData.session.user.id;
         hasActiveSession = true;
       } else {
         // 3. Truly new user — create auth account
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
         if (error) { Alert.alert('Erreur', error.message); return; }
         if (!data.user) return;
+        // Email déjà utilisé : Supabase renvoie un utilisateur sans identité
+        if (data.user.identities && data.user.identities.length === 0) {
+          Alert.alert(
+            'Email déjà utilisé',
+            'Un compte existe déjà avec cet email. Connectez-vous avec votre mot de passe.',
+            [{ text: 'OK', onPress: () => setMode('login') }]
+          );
+          return;
+        }
         userId = data.user.id;
       }
     }
 
     const { error: profileError } = await supabase.rpc('create_user_profile', {
       p_user_id: userId,
-      p_email: email,
-      p_full_name: fullName,
+      p_email: email.trim(),
+      p_full_name: fullName.trim(),
       p_role: role,
       p_referral_code: referralCode.trim() || null,
     });
@@ -115,7 +125,7 @@ export function AuthScreen({ route, navigation }: Props) {
   }
 
   async function handleSignIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
       Alert.alert(
         'Connexion impossible',
@@ -123,15 +133,6 @@ export function AuthScreen({ route, navigation }: Props) {
       );
     }
     // La navigation se fait automatiquement via le listener auth dans Navigation
-  }
-
-  async function handleMagicLink() {
-    if (!email) { Alert.alert('Email requis', 'Entrez votre email d\'abord.'); return; }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    setLoading(false);
-    if (error) { Alert.alert('Erreur', error.message); return; }
-    Alert.alert('Lien envoyé !', `Un lien de connexion a été envoyé à ${email}. Cliquez dessus pour accéder à votre compte.`);
   }
 
   return (
@@ -269,28 +270,11 @@ export function AuthScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           </View>
 
-          {/* Séparateur */}
-          <View style={styles.separator}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>ou</Text>
-            <View style={styles.separatorLine} />
-          </View>
-
-          {/* Magic link */}
-          <TouchableOpacity
-            style={styles.magicBtn}
-            onPress={handleMagicLink}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.magicBtnText}>✉️  Recevoir un lien par email</Text>
-          </TouchableOpacity>
-
           <Text style={styles.legal}>
             En créant un compte, vous acceptez nos{' '}
             <Text style={styles.legalLink}>Conditions d'utilisation</Text>
             {' '}et notre{' '}
-            <Text style={styles.legalLink}>Politique de confidentialité</Text>.
+            <Text style={styles.legalLink} onPress={() => Linking.openURL('https://www.cooppanier.fr/privacy.html')}>Politique de confidentialité</Text>.
           </Text>
 
         </ScrollView>
@@ -365,18 +349,7 @@ const styles = StyleSheet.create({
   },
   submitText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.blanc },
 
-  separator: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  separatorLine: { flex: 1, height: 1, backgroundColor: colors.bordure },
-  separatorText: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisClair },
 
-  magicBtn: {
-    borderWidth: 1.5,
-    borderColor: colors.bordure,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  magicBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: colors.gris },
 
   legal: {
     fontFamily: 'Inter_400Regular',
