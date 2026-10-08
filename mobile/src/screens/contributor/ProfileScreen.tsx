@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
@@ -95,10 +96,6 @@ export function ProfileScreen({ navigation }: Props) {
         },
       ]
     );
-  }
-
-  function handleComingSoon(feature: string) {
-    Alert.alert(feature, 'Cette fonctionnalité sera bientôt disponible.');
   }
 
   return (
@@ -198,11 +195,11 @@ export function ProfileScreen({ navigation }: Props) {
 
         {/* Menu */}
         <View style={styles.menu}>
-          <MenuItem emoji="📋" label="Historique des transactions" onPress={() => handleComingSoon('Historique')} />
-          <MenuItem emoji="🔔" label="Notifications" onPress={() => handleComingSoon('Notifications')} />
+          <MenuItem emoji="📋" label="Historique des transactions" onPress={() => navigation.navigate('TransactionHistory')} />
+          <MenuItem emoji="🔔" label="Notifications" onPress={() => navigation.navigate('NotificationSettings')} />
           <MenuItem emoji="🔒" label="Changer le mot de passe" onPress={handleChangePassword} />
-          <MenuItem emoji="🤝" label="Parrainer un ami" onPress={() => handleComingSoon('Parrainage')} />
-          <MenuItem emoji="📄" label="Mentions légales" onPress={() => handleComingSoon('Mentions légales')} isLast />
+          <MenuItem emoji="🤝" label="Parrainer un ami" onPress={() => navigation.navigate('Referral')} />
+          <MenuItem emoji="📄" label="Mentions légales" onPress={() => navigation.navigate('Legal')} isLast />
         </View>
 
         {/* Déconnexion */}
@@ -210,7 +207,7 @@ export function ProfileScreen({ navigation }: Props) {
           <Text style={styles.signOutText}>Se déconnecter</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Coop'Panier v1.0.0</Text>
+        <Text style={styles.version}>Coop'Panier v{Constants.expoConfig?.version ?? ''}</Text>
       </ScrollView>
     </SafeAreaView>
   );

@@ -19,6 +19,10 @@ import { ProfileScreen } from '@/screens/contributor/ProfileScreen';
 import { AssociationHomeScreen } from '@/screens/association/AssociationHomeScreen';
 import { ScanBeneficiaryScreen } from '@/screens/association/ScanBeneficiaryScreen';
 import { BeneficiaryListScreen } from '@/screens/association/BeneficiaryListScreen';
+import { TransactionHistoryScreen } from '@/screens/contributor/TransactionHistoryScreen';
+import { ReferralScreen } from '@/screens/contributor/ReferralScreen';
+import { NotificationsScreen } from '@/screens/contributor/NotificationsScreen';
+import { LegalScreen } from '@/screens/contributor/LegalScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -72,6 +76,21 @@ function ContributorTabs() {
   );
 }
 
+const ContributorStack = createNativeStackNavigator();
+
+// Onglets + écrans secondaires ouverts depuis le profil
+function ContributorApp() {
+  return (
+    <ContributorStack.Navigator screenOptions={{ headerShown: false }}>
+      <ContributorStack.Screen name="ContributorTabs" component={ContributorTabs} />
+      <ContributorStack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
+      <ContributorStack.Screen name="Referral" component={ReferralScreen} />
+      <ContributorStack.Screen name="NotificationSettings" component={NotificationsScreen} />
+      <ContributorStack.Screen name="Legal" component={LegalScreen} />
+    </ContributorStack.Navigator>
+  );
+}
+
 function BeneficiaryTabs() {
   return (
     <Tab.Navigator
@@ -109,31 +128,28 @@ export function Navigation() {
   const { session, profile, setSession, setProfile, loading } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => setSession(session))
-      .catch(() => setSession(null));
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        try {
-          setSession(session);
-          if (session) {
+      (_event, session) => {
+        // Ne jamais attendre un appel Supabase directement dans ce callback :
+        // le client se bloque (deadlock). On diffère le travail.
+        setTimeout(async () => {
+          if (!session) {
+            setProfile(null);
+            setSession(null);
+            return;
+          }
+          try {
             const { data } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
-              .single();
-            if (!data) {
-              setProfile(null);
-            } else {
-              setProfile(data);
-            }
-          } else {
-            setProfile(null);
+              .maybeSingle();
+            setProfile(data ?? null);
+          } catch {
+            // Réseau indisponible : on garde la session
           }
-        } catch {
-          setSession(null);
-        }
+          setSession(session);
+        }, 0);
       }
     );
 
@@ -151,10 +167,10 @@ export function Navigation() {
           <>
             <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
-            <Stack.Screen name="AuthStack" component={AuthScreen} />
+            <Stack.Screen name="AuthStack" component={AuthScreen as React.ComponentType<any>} />
           </>
         ) : profile.role === 'contributor' ? (
-          <Stack.Screen name="ContributorApp" component={ContributorTabs} />
+          <Stack.Screen name="ContributorApp" component={ContributorApp} />
         ) : profile.role === 'beneficiary' ? (
           <Stack.Screen name="BeneficiaryApp" component={BeneficiaryTabs} />
         ) : (
