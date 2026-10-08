@@ -7,6 +7,8 @@ import { Text, View } from 'react-native';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { colors } from '@/utils/theme';
+import type { Session } from '@supabase/supabase-js';
+import type { Profile } from '@/types';
 
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen';
 import { RoleSelectScreen } from '@/screens/onboarding/RoleSelectScreen';
@@ -109,36 +111,71 @@ const OnboardingScreens = () => (
   <>
     <Stack.Screen name="Onboarding" component={OnboardingScreen} />
     <Stack.Screen name="RoleSelect" component={RoleSelectScreen} />
-    <Stack.Screen name="AuthStack" component={AuthScreen} />
+    <Stack.Screen name="AuthStack" component={AuthScreen as React.ComponentType<any>} />
   </>
 );
+
+// Charge le profil de l'utilisateur connecté. Si le profil n'existe pas encore
+// (première connexion après confirmation de l'email), il est créé à partir des
+// informations saisies à l'inscription (user_metadata).
+async function loadOrCreateProfile(session: Session): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .maybeSingle();
+  // Erreur réseau / serveur : ne pas déconnecter l'utilisateur
+  if (error) throw error;
+  if (data) return data as Profile;
+
+  const meta = session.user.user_metadata ?? {};
+  if (!meta.role) return null;
+
+  const { error: rpcError } = await supabase.rpc('create_user_profile', {
+    p_user_id: session.user.id,
+    p_email: session.user.email ?? '',
+    p_full_name: meta.full_name ?? '',
+    p_role: meta.role,
+    p_referral_code: meta.referral_code || null,
+  });
+  if (rpcError) throw rpcError;
+
+  const { data: created } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .maybeSingle();
+  return (created as Profile) ?? null;
+}
 
 export function Navigation() {
   const { session, profile, setSession, setProfile, loading } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        if (session) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (!data) {
-            // Session orpheline sans profil — déconnecter
-            await supabase.auth.signOut();
-          } else {
-            setProfile(data);
+      (_event, session) => {
+        // Ne jamais attendre un appel Supabase directement dans ce callback :
+        // cela bloque le client (deadlock). On diffère le travail.
+        setTimeout(async () => {
+          if (!session) {
+            setProfile(null);
+            setSession(null);
+            return;
           }
-        } else {
-          setProfile(null);
-        }
+          try {
+            const p = await loadOrCreateProfile(session);
+            if (!p) {
+              // Compte sans profil exploitable — déconnecter
+              await supabase.auth.signOut();
+              return;
+            }
+            setProfile(p);
+            setSession(session);
+          } catch {
+            // Réseau indisponible : on garde la session, le profil sera rechargé plus tard
+            setSession(session);
+          }
+        }, 0);
       }
     );
 

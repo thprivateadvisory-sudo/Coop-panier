@@ -54,7 +54,7 @@ export function ContributorHomeScreen({ navigation }: Props) {
               <Text style={styles.pointsLabel}>Points disponibles</Text>
               {contributor ? (
                 <Text style={styles.pointsValue}>
-                  {contributor.points_available.toLocaleString('fr-FR')}
+                  {(contributor.points_available ?? 0).toLocaleString('fr-FR')}
                 </Text>
               ) : (
                 <ActivityIndicator color={colors.blanc} />
@@ -63,7 +63,7 @@ export function ContributorHomeScreen({ navigation }: Props) {
             <View style={styles.badgeTotal}>
               <Text style={styles.badgeTotalLabel}>Total cumulé</Text>
               <Text style={styles.badgeTotalValue}>
-                {contributor?.points_total.toLocaleString('fr-FR') ?? '—'}
+                {contributor?.points_total?.toLocaleString('fr-FR') ?? '—'}
               </Text>
             </View>
           </View>
@@ -107,7 +107,7 @@ export function ContributorHomeScreen({ navigation }: Props) {
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
             <Text style={[styles.statNum, { color: colors.orange }]}>
-              {stats?.families_helped.toLocaleString('fr-FR') ?? '—'}
+              {stats?.families_helped?.toLocaleString('fr-FR') ?? '—'}
             </Text>
             <Text style={styles.statLabel}>Familles{'\n'}aidées</Text>
           </View>
@@ -119,17 +119,17 @@ export function ContributorHomeScreen({ navigation }: Props) {
           <View style={styles.impactGrid}>
             <ImpactTile
               emoji="🧺"
-              value={stats?.baskets_distributed.toLocaleString('fr-FR') ?? '…'}
+              value={stats?.baskets_distributed?.toLocaleString('fr-FR') ?? '…'}
               label="Paniers distribués"
             />
             <ImpactTile
               emoji="🏘️"
-              value={stats?.cities_covered.toLocaleString('fr-FR') ?? '…'}
+              value={stats?.cities_covered?.toLocaleString('fr-FR') ?? '…'}
               label="Villes couvertes"
             />
             <ImpactTile
               emoji="👥"
-              value={stats?.total_contributors.toLocaleString('fr-FR') ?? '…'}
+              value={stats?.total_contributors?.toLocaleString('fr-FR') ?? '…'}
               label="Contributeurs"
             />
             <ImpactTile

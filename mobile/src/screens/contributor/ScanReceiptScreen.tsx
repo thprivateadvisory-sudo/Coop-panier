@@ -10,98 +10,162 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as Crypto from 'expo-crypto';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, radius } from '@/utils/theme';
 import { supabase } from '@/services/supabase';
-import { useAuthStore } from '@/store/authStore';
 
-type ScanState = 'idle' | 'camera' | 'processing' | 'result';
+// Même API que l'application web (OCR + crédit des points côté serveur)
+const API_URL = 'https://coop-panier.vercel.app/api';
+
+type ScanState = 'idle' | 'camera' | 'processing' | 'result' | 'submitting';
 
 type OcrResult = {
-  store_name: string;
-  total_amount: number;
-  purchase_date: string;
-  points_earned: number;
-  confidence: number;
+  storeName: string | null;
+  detectedAmount: number | null;
+  purchaseDate: string | null;
+  confidence: number | null;
+  imageUrl: string | null;
+  amountToken: string | null;
 };
 
 type Props = { navigation: any };
 
+async function getAccessToken() {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export function ScanReceiptScreen({ navigation }: Props) {
-  const profile = useAuthStore((s) => s.profile);
   const [permission, requestPermission] = useCameraPermissions();
   const [state, setState] = useState<ScanState>('idle');
   const [result, setResult] = useState<OcrResult | null>(null);
+  const [imageHash, setImageHash] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
 
   async function handleCameraCapture() {
     if (!permission?.granted) {
-      await requestPermission();
-      return;
+      const res = await requestPermission();
+      if (!res.granted) {
+        Alert.alert('Caméra refusée', 'Autorisez la caméra dans les réglages, ou importez une photo depuis la galerie.');
+        return;
+      }
     }
     setState('camera');
   }
 
   async function handleGalleryPick() {
-    const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!picked.canceled && picked.assets[0]) {
-      await processImage(picked.assets[0].uri);
+    try {
+      const picked = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 1,
+      });
+      if (!picked.canceled && picked.assets?.[0]) {
+        await processImage(picked.assets[0].uri);
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie.');
     }
   }
 
   async function takePicture() {
-    const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8 });
-    if (photo?.uri) {
-      setState('processing');
-      await processImage(photo.uri);
+    try {
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 1 });
+      if (photo?.uri) await processImage(photo.uri);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de prendre la photo. Réessayez.');
+      setState('idle');
     }
   }
 
   async function processImage(uri: string) {
     setState('processing');
     try {
-      // Upload image to Supabase Storage
-      const fileName = `receipts/${profile?.id}/${Date.now()}.jpg`;
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(fileName, blob, { contentType: 'image/jpeg' });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(fileName);
-
-      // Appel à la Edge Function OCR
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
-        'process-receipt',
-        { body: { image_url: publicUrl, contributor_id: profile?.id } }
+      // Réduire la taille de l'image avant envoi (limite de taille côté serveur)
+      const resized = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 1400 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
       );
+      if (!resized.base64) throw new Error('image');
 
-      if (ocrError) throw ocrError;
+      const hash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        resized.base64
+      );
+      setImageHash(hash);
 
-      setResult(ocrData as OcrResult);
+      const token = await getAccessToken();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!token || !session) throw new Error('auth');
+
+      const resp = await fetch(`${API_URL}/scan-receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          imageBase64: `data:image/jpeg;base64,${resized.base64}`,
+          contributorId: session.user.id,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error ?? 'scan');
+
+      if (data.detectedAmount == null || !data.amountToken) {
+        Alert.alert(
+          'Montant illisible',
+          'Nous n\'avons pas pu lire le total du ticket. Reprenez la photo avec le total bien visible.'
+        );
+        setState('idle');
+        return;
+      }
+
+      setResult(data as OcrResult);
       setState('result');
-    } catch (err) {
-      Alert.alert('Erreur', 'Impossible de traiter ce ticket. Vérifiez la photo et réessayez.');
+    } catch {
+      Alert.alert('Erreur', 'Impossible de traiter ce ticket. Vérifiez la photo et votre connexion, puis réessayez.');
       setState('idle');
     }
   }
 
   async function confirmReceipt() {
-    if (!result) return;
-    // Les points sont déjà crédités par la Edge Function
-    Alert.alert(
-      '🎉 Bravo !',
-      `Vous venez de gagner ${result.points_earned} points !`,
-      [{ text: 'Super !', onPress: () => navigation.goBack() }]
-    );
+    if (!result?.detectedAmount || !result.amountToken) return;
+    setState('submitting');
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error('auth');
+
+      const resp = await fetch(`${API_URL}/submit-scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          detectedAmount: result.detectedAmount,
+          amountToken: result.amountToken,
+          imageHash,
+          imageUrl: result.imageUrl || null,
+          storeName: result.storeName ?? null,
+          purchaseDate: result.purchaseDate ?? null,
+          ocrConfidence: result.confidence ?? null,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        Alert.alert('Ticket refusé', data?.error ?? 'Erreur lors de la validation.');
+        setState('result');
+        return;
+      }
+
+      setResult(null);
+      setState('idle');
+      Alert.alert(
+        '🎉 Bravo !',
+        `Vous venez de gagner ${data.earned} points !`,
+        [{ text: 'Super !', onPress: () => navigation.navigate('Home') }]
+      );
+    } catch {
+      Alert.alert('Erreur', 'Impossible de valider le ticket. Vérifiez votre connexion et réessayez.');
+      setState('result');
+    }
   }
 
   if (state === 'camera') {
@@ -130,7 +194,7 @@ export function ScanReceiptScreen({ navigation }: Props) {
     );
   }
 
-  if (state === 'processing') {
+  if (state === 'processing' || state === 'submitting') {
     return (
       <View style={styles.processingContainer}>
         <ActivityIndicator size="large" color={colors.vert} />
@@ -143,29 +207,25 @@ export function ScanReceiptScreen({ navigation }: Props) {
   }
 
   if (state === 'result' && result) {
-    const confidence = Math.round(result.confidence * 100);
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.resultTitle}>Ticket reconnu ✓</Text>
 
           <View style={styles.resultCard}>
-            <ResultRow label="Magasin" value={result.store_name || 'Non détecté'} />
-            <ResultRow label="Total" value={`${result.total_amount?.toFixed(2)} €`} />
-            <ResultRow label="Date" value={result.purchase_date || '—'} />
-            <ResultRow label="Fiabilité OCR" value={`${confidence}%`} />
-          </View>
-
-          <View style={styles.pointsBanner}>
-            <Text style={styles.pointsBannerLabel}>Points à créditer</Text>
-            <Text style={styles.pointsBannerValue}>+{result.points_earned} pts</Text>
+            <ResultRow label="Magasin" value={result.storeName || 'Non détecté'} />
+            <ResultRow label="Total" value={`${(result.detectedAmount ?? 0).toFixed(2)} €`} />
+            <ResultRow label="Date" value={result.purchaseDate || '—'} />
+            {result.confidence != null && (
+              <ResultRow label="Fiabilité OCR" value={`${Math.round(result.confidence * 100)}%`} />
+            )}
           </View>
 
           <TouchableOpacity style={styles.confirmBtn} onPress={confirmReceipt} activeOpacity={0.85}>
             <Text style={styles.confirmBtnText}>Valider et créditer mes points</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setState('idle')}>
+          <TouchableOpacity onPress={() => { setResult(null); setState('idle'); }}>
             <Text style={styles.retryText}>Ce n'est pas bon ? Réessayer</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -176,14 +236,10 @@ export function ScanReceiptScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹ Retour</Text>
-        </TouchableOpacity>
-
         <Text style={styles.title}>Scanner un ticket</Text>
         <Text style={styles.subtitle}>
           Photographiez votre ticket de caisse pour gagner des points.
-          1€ d'achat = 10 points.
+          1 € d'achat = 1 point (plus avec un abonnement).
         </Text>
 
         <TouchableOpacity style={styles.mainOption} onPress={handleCameraCapture} activeOpacity={0.85}>
@@ -371,23 +427,6 @@ const styles = StyleSheet.create({
   },
   resultLabel: { fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.grisMoyen },
   resultValue: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: colors.gris },
-  pointsBanner: {
-    backgroundColor: colors.vertPale,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  pointsBannerLabel: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    color: colors.grisMoyen,
-  },
-  pointsBannerValue: {
-    fontFamily: 'Nunito_900Black',
-    fontSize: 40,
-    color: colors.vert,
-  },
   confirmBtn: {
     backgroundColor: colors.vert,
     borderRadius: radius.md,

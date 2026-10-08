@@ -97,10 +97,6 @@ export function SubscriptionsScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹ Retour</Text>
-        </TouchableOpacity>
-
         <Text style={styles.title}>Choisissez votre plan</Text>
         <Text style={styles.subtitle}>
           Multipliez votre impact en gagnant plus de points sur chaque ticket.

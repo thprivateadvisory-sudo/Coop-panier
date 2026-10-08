@@ -66,46 +66,35 @@ export function AuthScreen({ route, navigation }: Props) {
   }
 
   async function handleSignUp() {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) { Alert.alert('Erreur', error.message); return; }
-    if (!data.user) return;
-
-    // Créer le profil
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      email,
-      full_name: fullName,
-      role,
+    // Le profil est créé à la première connexion (voir navigation/index.tsx)
+    // à partir de ces métadonnées, une fois la session active.
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+          role,
+          referral_code: role === 'contributor' && referralCode.trim()
+            ? referralCode.trim().toUpperCase()
+            : null,
+        },
+      },
     });
-    if (profileError) { Alert.alert('Erreur', profileError.message); return; }
+    if (error) { Alert.alert('Erreur', error.message); return; }
 
-    // Créer le sous-profil selon le rôle
-    if (role === 'contributor') {
-      await supabase.from('contributor_profiles').insert({
-        profile_id: data.user.id,
-        ...(referralCode.trim() ? { referred_by: referralCode.trim().toUpperCase() } : {}),
-      });
-    } else if (role === 'beneficiary') {
-      await supabase.from('beneficiary_profiles').insert({ profile_id: data.user.id });
-    } else if (role === 'association') {
-      await supabase.from('association_profiles').insert({
-        profile_id: data.user.id,
-        association_name: fullName,
-        address: '',
-        city: '',
-        postal_code: '',
-      });
+    if (!data.session) {
+      Alert.alert(
+        'Compte créé !',
+        'Vérifiez votre email pour confirmer votre inscription, puis connectez-vous.',
+        [{ text: 'OK', onPress: () => setMode('login') }]
+      );
     }
-
-    Alert.alert(
-      'Compte créé !',
-      'Vérifiez votre email pour confirmer votre inscription, puis connectez-vous.',
-      [{ text: 'OK', onPress: () => setMode('login') }]
-    );
+    // Sinon la navigation se fait automatiquement via le listener auth
   }
 
   async function handleSignIn() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
       Alert.alert(
         'Connexion impossible',
@@ -113,15 +102,6 @@ export function AuthScreen({ route, navigation }: Props) {
       );
     }
     // La navigation se fait automatiquement via le listener auth dans Navigation
-  }
-
-  async function handleMagicLink() {
-    if (!email) { Alert.alert('Email requis', 'Entrez votre email d\'abord.'); return; }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    setLoading(false);
-    if (error) { Alert.alert('Erreur', error.message); return; }
-    Alert.alert('Lien envoyé !', `Un lien de connexion a été envoyé à ${email}. Cliquez dessus pour accéder à votre compte.`);
   }
 
   return (
@@ -259,23 +239,6 @@ export function AuthScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           </View>
 
-          {/* Séparateur */}
-          <View style={styles.separator}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>ou</Text>
-            <View style={styles.separatorLine} />
-          </View>
-
-          {/* Magic link */}
-          <TouchableOpacity
-            style={styles.magicBtn}
-            onPress={handleMagicLink}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.magicBtnText}>✉️  Recevoir un lien par email</Text>
-          </TouchableOpacity>
-
           <Text style={styles.legal}>
             En créant un compte, vous acceptez nos{' '}
             <Text style={styles.legalLink}>Conditions d'utilisation</Text>
@@ -355,18 +318,6 @@ const styles = StyleSheet.create({
   },
   submitText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: colors.blanc },
 
-  separator: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  separatorLine: { flex: 1, height: 1, backgroundColor: colors.bordure },
-  separatorText: { fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.grisClair },
-
-  magicBtn: {
-    borderWidth: 1.5,
-    borderColor: colors.bordure,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  magicBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: colors.gris },
 
   legal: {
     fontFamily: 'Inter_400Regular',

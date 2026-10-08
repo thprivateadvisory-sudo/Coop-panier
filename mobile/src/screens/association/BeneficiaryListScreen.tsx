@@ -43,7 +43,7 @@ export function BeneficiaryListScreen({ navigation }: Props) {
   useEffect(() => {
     const q = search.toLowerCase();
     setFiltered(
-      q ? beneficiaries.filter((b) => b.full_name.toLowerCase().includes(q)) : beneficiaries
+      q ? beneficiaries.filter((b) => (b.full_name ?? '').toLowerCase().includes(q)) : beneficiaries
     );
   }, [search, beneficiaries]);
 
@@ -94,7 +94,7 @@ export function BeneficiaryListScreen({ navigation }: Props) {
       <View style={styles.card}>
         <View style={styles.cardLeft}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{item.full_name[0]?.toUpperCase()}</Text>
+            <Text style={styles.avatarText}>{(item.full_name || '?')[0]?.toUpperCase()}</Text>
           </View>
           <View style={styles.info}>
             <Text style={styles.name}>{item.full_name}</Text>
