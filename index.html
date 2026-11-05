@@ -427,6 +427,14 @@
       .feat-hero, .feat-wide { grid-column: span 2; }
       .cta-card { grid-template-columns: 1fr; padding: 56px 40px; }
     }
+    @media (min-width: 901px) and (max-width: 1320px) {
+      .float-1 { left: -4%; }
+      .float-2 { right: -3%; top: 8%; }
+    }
+    @media (min-width: 681px) and (max-width: 900px) {
+      .float-1 { left: auto; right: calc(50% + 115px); }
+      .float-2 { right: auto; left: calc(50% + 115px); }
+    }
     @media (max-width: 900px) {
       .nav-links { display: none; }
       .nav-toggle { display: block; }
